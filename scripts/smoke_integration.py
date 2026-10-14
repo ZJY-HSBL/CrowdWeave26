@@ -13,7 +13,13 @@ def check(mode: str, imgsz: int = 96) -> dict:
     install_crowdweave(model, mode)
     model.train()
     outputs = model(torch.randn(1, 3, imgsz, imgsz))
-    assert set(outputs) == {"one2many", "one2one"}
+    expected = {"one2many", "one2one"}
+    if mode in ("cfsr", "both"):
+        expected.add("crowd_conflict_logits")
+        logits = outputs["crowd_conflict_logits"]
+        assert logits.shape == (1, 1, imgsz // 8, imgsz // 8)
+        assert torch.isfinite(logits).all()
+    assert set(outputs) == expected
     feats = outputs["one2many"]["feats"]
     assert len(feats) == 4
     assert [int(f.shape[-1]) for f in feats] == [imgsz // s for s in (4, 8, 16, 32)]

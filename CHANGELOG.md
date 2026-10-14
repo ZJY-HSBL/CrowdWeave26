@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased — supervised crowd-overlap learning (v0.3.0 candidate)
+
+- Add augmentation-aligned full-body GT-overlap targets computed from each live YOLO training batch.
+- Add bounded class-balanced BCE conflict supervision to official YOLO26 E2E O2M/O2O criterion.
+- Expose --conflict-weight and preserve base loss components and original decay schedule.
+- Add CPU geometry/gradient tests and pinned-upstream integration criterion test.
+- Still no CrowdHuman ignored-negative mask, official benchmark results, GPU training or export validation.
+
+
 ## v0.2.0 — 2026-10-14
 
 - Integrate experimental SCAD backbone downsampling and CFSR head fusion into official pinned YOLO26-P2.

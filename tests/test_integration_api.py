@@ -31,3 +31,29 @@ def test_real_yolo26_training_criterion_has_finite_gradients():
     loss.sum().backward()
     assert model.model[3].detail[0].weight.grad is not None
     assert model.model[-1].crowd_cfsr_gain.grad is not None
+
+
+
+def test_supervised_conflict_loss_backpropagates_to_cfsr_logits():
+    import torch
+    from ultralytics.cfg import get_cfg
+    from crowdweave26.integration import CrowdSupervisedDetectionModel, install_crowdweave
+    model = CrowdSupervisedDetectionModel("yolo26n-p2.yaml", nc=1, verbose=False)
+    install_crowdweave(model, "both")
+    model.args = get_cfg()
+    model.crowd_conflict_weight = 0.25
+    model.train()
+    batch = {
+        "img": torch.rand(1, 3, 96, 96),
+        "batch_idx": torch.tensor([0.0, 0.0]),
+        "cls": torch.tensor([[0.0], [0.0]]),
+        "bboxes": torch.tensor([[0.50, 0.50, 0.45, 0.60], [0.55, 0.52, 0.45, 0.60]]),
+    }
+    loss, items = model(batch)
+    assert loss.numel() == 4 and "conflict_loss" in items
+    assert torch.isfinite(loss).all()
+    loss.sum().backward()
+    assert model.model[-1].crowd_cfsr.conflict.weight.grad is not None
+    assert model.model[-1].crowd_cfsr.conflict.weight.grad.abs().sum() > 0
+    assert hasattr(model.criterion, "update")
+    model.criterion.update()

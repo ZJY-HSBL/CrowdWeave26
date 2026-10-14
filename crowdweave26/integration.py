@@ -11,11 +11,15 @@ import torch
 from torch import nn
 from ultralytics.models.yolo.detect.train import DetectionTrainer
 from ultralytics.nn.modules.head import Detect
+from ultralytics.nn.tasks import DetectionModel
+
+from .criterion import CrowdConflictE2ELoss
 
 from .modules import CFSRNeck, SCADDownsample
 
 MODES = ("none", "scad", "cfsr", "both")
 ENV_MODE = "CROWDWEAVE26_MODE"
+ENV_CONFLICT_WEIGHT = "CROWDWEAVE26_CONFLICT_WEIGHT"
 
 
 class CrowdDetect(Detect):
@@ -24,10 +28,15 @@ class CrowdDetect(Detect):
     def forward(self, x: list[torch.Tensor]):
         if len(x) != 4:
             raise ValueError("CFSR requires YOLO26 P2/P3/P4/P5 inputs")
-        update = self.crowd_cfsr((x[0], x[1], x[2]))
+        update, logits, _ = self.crowd_cfsr((x[0], x[1], x[2]), return_aux=True)
         x = list(x)
         x[1] = x[1] + self.crowd_cfsr_gain * update
-        return super().forward(x)
+        prediction = super().forward(x)
+        if self.training:
+            # Returning logits in the forward graph is DDP-friendlier than
+            # caching the tensor on the head out-of-band.
+            prediction["crowd_conflict_logits"] = logits
+        return prediction
 
 
 def install_crowdweave(model: nn.Module, mode: str = "both") -> nn.Module:
@@ -72,6 +81,16 @@ def install_crowdweave(model: nn.Module, mode: str = "both") -> nn.Module:
     return model
 
 
+class CrowdSupervisedDetectionModel(DetectionModel):
+    """Official YOLO26 model with a supervised, opt-in crowd auxiliary criterion."""
+
+    def init_criterion(self):
+        if isinstance(self.model[-1], CrowdDetect):
+            weight = float(getattr(self, "crowd_conflict_weight", 0.25))
+            return CrowdConflictE2ELoss(self, conflict_weight=weight)
+        return super().init_criterion()
+
+
 class CrowdWeaveTrainer(DetectionTrainer):
     """Install custom graph BEFORE loading pretrained weights.
 
@@ -80,9 +99,17 @@ class CrowdWeaveTrainer(DetectionTrainer):
     """
 
     def get_model(self, cfg=None, weights=None, verbose=True):
-        model = super().get_model(cfg=cfg, weights=None, verbose=verbose)
+        model = self.set_model_names_for_load(
+            CrowdSupervisedDetectionModel(
+                cfg=cfg, nc=self.data["nc"], ch=self.data["channels"], verbose=verbose
+            )
+        )
         mode = os.environ.get(ENV_MODE, "both")
         install_crowdweave(model, mode)
+        weight = float(os.environ.get(ENV_CONFLICT_WEIGHT, "0.25"))
+        if not 0.0 <= weight <= 10.0:
+            raise ValueError("CFSR conflict supervision weight must be in [0, 10]")
+        model.crowd_conflict_weight = weight
         if weights is not None:
             model.load(weights)
             if mode in ("scad", "both"):

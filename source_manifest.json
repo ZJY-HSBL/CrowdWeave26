@@ -1,24 +1,31 @@
 {
   "repository": "https://github.com/ultralytics/ultralytics",
   "upstream_commit": "a0fd1d727fe5ef5c0f6837646f794eba5b0575f5",
-  "checked_utc": "2026-10-14",
+  "checked_utc": "2026-10-15",
   "source_reviewed": [
     "ultralytics/cfg/models/26/yolo26.yaml",
     "ultralytics/cfg/models/26/yolo26-p2.yaml",
     "ultralytics/nn/modules/head.py",
     "ultralytics/utils/loss.py",
     "ultralytics/utils/tal.py",
-    "ultralytics/nn/tasks.py"
+    "ultralytics/nn/tasks.py",
+    "ultralytics/models/yolo/detect/train.py"
   ],
-  "note": "Original design hypotheses; three independent prototypes only; no benchmark results.",
-  "research_modules_status": "SCAD/CFSR integrated via optional YOLO26-P2 trainer and Detect subclass on main; true YOLO26 gradient and criterion CI checks; no CrowdHuman training, metrics, or CFSR conflict-field supervision.",
-  "baseline_code_status": "Pinned YOLO26 official source exercised by GitHub integration CI; no CrowdHuman dataset mounted.",
-  "v02_integration": {
-    "architecture": "YOLO26-P2",
-    "features": [
-      "SCAD stride-2 backbone layer 3",
-      "CFSR residual P3 refinement using P2/P3/P4"
-    ],
-    "release_scope": "integration validation only; no benchmark assertions"
-  }
+  "baseline_code_status": "Pinned official YOLO26 tested in GitHub CI; no CrowdHuman full training results",
+  "research_modules_status": {
+    "SCAD": "Integrated into YOLO26-P2",
+    "CFSR": "Integrated with augmented GT-overlap auxiliary supervision",
+    "CRA": "Opt-in official TAL collision repair on main; training-loop smoke gate pending",
+    "GOTP": "Standalone only",
+    "VGCR": "Proposed",
+    "ACDT": "Proposed"
+  },
+  "evaluation_limits": [
+    "No official CrowdHuman AP/mMR/JI",
+    "No ignore-aware negative training mask",
+    "No multi-seed measured accuracy gain",
+    "No novelty verification",
+    "CRA CPU synchronization may impact throughput"
+  ],
+  "license_note": "Ultralytics AGPL-3.0/commercial license applies to upstream and derivatives as appropriate"
 }

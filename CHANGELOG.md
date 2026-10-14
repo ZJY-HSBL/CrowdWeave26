@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased — v0.4.0 CRA candidate
+
+- Introduce Collision-Reserved Assignment (CRA) using deterministic sparse
+  alternating paths to recover feasible GTs orphaned by official TAL collisions.
+- Preserve official One-to-Many/One-to-One criteria and offer a separate
+  `--assignment standard|cra` ablation switch.
+- Add randomized invariant tests, synthetic collision/long-chain tests, and
+  real pinned-YOLO26 forward/backward criterion tests.
+- Add a full one-epoch synthetic Ultralytics CPU training gate before release.
+- Pin matching CPU PyTorch/torchvision versions for reliable CI and update
+  the research matrix and upstream manifest.
+- Research boundary: no full CrowdHuman training, ignored-negative masking,
+  performance overhead measurement or accuracy/novelty claims.
+
+
+
 ## v0.3.0 — 2026-10-15 supervised crowd-overlap learning
 
 - Add augmentation-aligned full-body GT-overlap targets computed from each live YOLO training batch.

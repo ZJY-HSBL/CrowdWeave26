@@ -1,123 +1,123 @@
 # CrowdWeave26
 
-**Occlusion-Aware Dense Pedestrian Detection with YOLO26**  
+**Occlusion-aware dense pedestrian detection research based on YOLO26**  
 **基于 YOLO26 的密集行人遮挡感知检测研究**
 
-CrowdWeave26 develops six candidate mechanisms for dense pedestrian detection. This is a reproducible research project: proposed mechanisms are not assumed to be novel or beneficial until ablated and independently tested.
+[Releases](https://github.com/ZJY-HSBL/CrowdWeave26/releases) ·
+[Research protocol](docs/EXPERIMENTS.md) · [Roadmap](docs/ROADMAP.md)
 
-## v0.2.0 — YOLO26-P2 architectural integration
-- Pinned upstream Ultralytics YOLO26 baseline runner, including official P2 variants.
-- CrowdHuman ODGT converter retaining original head/visible/full boxes and ignored regions as metadata.
-- SCAD/CFSR now have opt-in YOLO26-P2 graph integration on main; GOTP remains standalone.
-- Unit tests and an automated, test-gated GitHub Releases workflow, plus a roadmap and experiment protocol.
+CrowdWeave26 is an **experimental** PyTorch/Ultralytics research project.
+It preserves a pinned official YOLO26 source baseline and develops six
+independently ablatable mechanisms. The code does **not** yet establish
+novelty, higher AP, lower miss rate or a new state of the art.
 
-### Windows setup
+本仓库以固定提交的官方 YOLO26 为基线，研究密集行人场景中的尺度混叠、
+遮挡冲突与正样本竞争。所有改进均须通过真实数据消融、官方评测及多随机种子
+检验后才能形成论文结论；代码测试通过不代表检测精度提升。
+
+## Research status / 研究进度
+
+| Mechanism | Hypothesis | Implementation status |
+| --- | --- | --- |
+| **SCAD** | Spatial-Conflict Anti-Aliasing Downsampling | Integrated into YOLO26-P2, opt-in |
+| **CFSR** | Conflict-Field Scale Routing | Integrated into YOLO26-P2, supervised by augmented GT box overlap |
+| **CRA** | Collision-Reserved Assignment | Integrated into official TAL as an opt-in training-only experiment on `main` |
+| **GOTP** | GT-Overlap-Tolerant Pairwise Loss | Standalone prototype; not in official training criterion |
+| **VGCR** | Visibility-Geometry Consistent Reconstruction | Design proposal, not integrated |
+| **ACDT** | Ambiguity-Calibrated Dual-Head Transfer | Design proposal, not integrated |
+
+SCAD/CFSR require the four-scale YOLO26-P2 graph. CRA is independent of
+SCAD/CFSR and can be compared using an otherwise unchanged YOLO26-P2 baseline.
+
+**Upstream:** [Ultralytics](https://github.com/ultralytics/ultralytics)
+at commit `a0fd1d727fe5ef5c0f6837646f794eba5b0575f5`.
+We do not vendor Ultralytics source, trained weights or CrowdHuman data.
+Review upstream AGPL-3.0/commercial licensing before redistribution or use.
+
+## Installation / 安装
+
+Python 3.11 is used in CI. On Windows PowerShell, from the repository root:
+
 ```powershell
 python -m pip install -e ".[dev]"
 powershell -ExecutionPolicy Bypass -File .\bootstrap.ps1
 python -m pytest -q
+python scripts/smoke_integration.py --mode both --imgsz 96
 ```
 
-### CrowdHuman preparation
+The bootstrap script clones and installs the pinned official YOLO26
+source into `ultralytics-src/`. For reproducibility, the CPU GitHub Actions
+environment pins PyTorch 2.10.0 and torchvision 0.25.0.
+
+## CrowdHuman conversion / 数据准备
+
+Prepare the official CrowdHuman images and ODGT annotations yourself.
+No dataset is included in this repository.
+
 ```powershell
 python -m crowdweave.prepare --odgt D:/CrowdHuman/annotation_train.odgt --images D:/CrowdHuman/Images --output D:/CrowdHuman/yolo --split train
 python -m crowdweave.prepare --odgt D:/CrowdHuman/annotation_val.odgt --images D:/CrowdHuman/Images --output D:/CrowdHuman/yolo --split val --write-yaml
-```
-
-### YOLO26 training
-```powershell
-python -m crowdweave.cli train --data D:/CrowdHuman/yolo/crowdhuman.yaml --variant n --batch 4 --epochs 200 --seed 0
-python -m crowdweave.cli train --data D:/CrowdHuman/yolo/crowdhuman.yaml --variant n-p2 --batch 4 --epochs 200 --seed 0
-python -m crowdweave.cli val --data D:/CrowdHuman/yolo/crowdhuman.yaml --weights runs/crowdweave26/yolo26_n_seed0/weights/best.pt
-python -m crowdweave.cli val --data D:/CrowdHuman/yolo/crowdhuman.yaml --weights runs/crowdweave26/yolo26_n_seed0/weights/best.pt --nms-free
-```
-
-**Important:** Plain YOLO labels cannot mask ignored CrowdHuman regions. Our converter preserves ignore metadata but v0.1.0 does NOT solve ignore-aware negative supervision. Use an evaluator implementing original CrowdHuman AP/mMR/JI protocol; do not identify regular YOLO mAP with CrowdHuman official results.
-
-Six candidates:
-1. SCAD — Spatial-Conflict Anti-Aliasing Downsampling (standalone prototype)
-2. VGCR — Visibility-Geometry Consistent Reconstruction (proposal)
-3. CFSR — Conflict-Field Scale Routing (standalone prototype)
-4. CRA — Collision-Reserved Assignment (proposal)
-5. GOTP — GT-Overlap-Tolerant Pairwise Loss (standalone prototype)
-6. ACDT — Ambiguity-Calibrated Dual-Head Transfer (proposal)
-
-The repository does not vendor Ultralytics or distribute datasets/weights. Upstream uses AGPL-3.0/commercial licensing; examine obligations before integrating and redistributing derivatives. Details: [Research roadmap](docs/ROADMAP.md), [Experiments](docs/EXPERIMENTS.md).
-
-**Release policy:** bump VERSION on main to trigger an automated GitHub Release.
-
-v0.1.0 is retained as the initial snapshot; v0.1.1 contains the updated research prototypes and release tooling.\n\nThe research modules in `crowdweave26/` are separate from the official baseline trainer in `crowdweave/cli.py`; SCAD/CFSR are installed via a custom trainer rather than changing the upstream YAML parser; there are still no trained benchmark results. Run `python -m pytest -q` before any model training.
-
-
-## YOLO26-P2 integration and ablations
-
-Experimental SCAD/CFSR integration is now available on `main` for the **official pinned YOLO26-P2** architecture. SCAD replaces backbone layer 3 (P2→P3 stride-2); CFSR uses the existing P2/P3/P4 feature maps to refine the P3 input of the original Detect head, retaining all four detection scales and both One-to-Many and One-to-One branches. Ultralytics would normally reconstruct the detector during training, so `CrowdWeaveTrainer.get_model` installs the modules before weight transfer.
-
-```powershell
-python scripts/smoke_integration.py --mode both --imgsz 96
-python -m crowdweave.cli train --data D:/CrowdHuman/yolo/crowdhuman.yaml --variant n-p2 --mechanism both --device 0 --batch 4 --epochs 200
-```
-
-For a controlled ablation, set `--mechanism scad`, `cfsr`, `both` or `none` (baseline). Validate custom checkpoints by loading them normally from a trusted source, with `crowdweave26` installed. This milestone confirms wiring only, not trained improvements. **CFSR logits are not yet overlap-supervised**, and neither CrowdHuman AP/mMR/JI nor export/deployment performance has been evaluated. The release does not contain trained CrowdHuman weights or validated benchmark improvements.
-
-
-## v0.3.0 — supervised CFSR conflict field
-The supervised CFSR experiment now trains an auxiliary overlap logit from the **currently augmented**
-YOLO batch's full-body boxes. The target marks cells covered by at least two trainable rectangles;
-this is a *box-overlap proxy*, not ground-truth visible-area occlusion. The loss is a bounded,
-positive-weighted BCE added as a fourth item to the unchanged YOLO26 O2M/O2O losses.
-
-```powershell
-python -m crowdweave.cli train --data D:/CrowdHuman/yolo/crowdhuman.yaml --variant n-p2 --mechanism both --conflict-weight 0.25 --batch 4 --epochs 200
-```
-
-**Unsolved limitation:** CrowdHuman ignore regions are still metadata only; normal Ultralytics
-augmentation does not geometrically transform that metadata into a training ignore mask.
-The auxiliary target excludes ignored labels from the positive set but is *not* ignore-aware negative
-supervision. Do not equate these experiments with protocol-correct CrowdHuman AP/mMR/JI.
-No real dataset training gains, novel-mechanism precedence, multi-GPU or export claims.
-
-
-### Dataset quality audit (original-coordinate GT and ignore boxes)
-
-```powershell
 python -m crowdweave.audit --metadata D:/CrowdHuman/yolo/metadata --split train
-python -m crowdweave.audit --metadata D:/CrowdHuman/yolo/metadata --split val
 ```
 
-The audit counts images with valid-pedestrian IoU >= 0.3, box-overlap prevalence,
-ignore-annotation incidence and valid-person boxes intersecting ignored rectangles.
-These statistics **do not** mask ignored pixels during network training, and they
-are not a substitute for the official CrowdHuman validation protocol.
+The converter uses full-body person boxes for YOLO labels, while retaining
+head/visible/full-body associations and ignore annotations in JSON metadata.
+**Important:** ignored boxes are *not* transformed into train-time negative
+masks. Regular YOLO mAP is **not** official CrowdHuman AP/mMR/JI.
 
+## Controlled ablations / 对照实验
 
-## Experimental CRA: collision-reserved assignment (v0.4.0 candidate)
-
-CRA wraps the official YOLO26 Task-Aligned Assigner with a sparse, deterministic
-augmenting-path recovery step. When multiple pedestrians compete for candidate
-anchors, a previously unrepresented person can receive a positive **only if**
-existing positives can be relocated without leaving another person uncovered.
-All candidate anchors come from official TAL top-k; each anchor has one owner.
-This is a **training-only**, opt-in research mechanism and may slow CUDA training
-because the prototype synchronizes sparse candidate lists to CPU.
+Use the same training budget, seed, input resolution, augmentation and data
+for each comparison. These are **commands**, not completed benchmark runs.
 
 ```powershell
-# Architecture-controlled CRA ablation
+# P2 baseline
 python -m crowdweave.cli train --data D:/CrowdHuman/yolo/crowdhuman.yaml --variant n-p2 --mechanism none --assignment standard --seed 0
+
+# CRA only: isolate the assignment mechanism
 python -m crowdweave.cli train --data D:/CrowdHuman/yolo/crowdhuman.yaml --variant n-p2 --mechanism none --assignment cra --seed 0
 
-# Combined SCAD + CFSR + CRA experiment
+# SCAD + CFSR only
+python -m crowdweave.cli train --data D:/CrowdHuman/yolo/crowdhuman.yaml --variant n-p2 --mechanism both --assignment standard --conflict-weight 0.25 --seed 0
+
+# SCAD + CFSR + CRA
 python -m crowdweave.cli train --data D:/CrowdHuman/yolo/crowdhuman.yaml --variant n-p2 --mechanism both --assignment cra --conflict-weight 0.25 --seed 0
 ```
 
-No real CrowdHuman train-time ignore mask, official AP/mMR/JI, multi-seed
-accuracy improvement, performance budget or first-of-kind novelty has been
-verified. Do not use the research prototype as an established SOTA result.
+Validate a trained checkpoint using the ordinary loader (trusted checkpoints
+only; PyTorch checkpoints may execute code). For example:
 
+```powershell
+python -m crowdweave.cli val --data D:/CrowdHuman/yolo/crowdhuman.yaml --weights path/to/best.pt
+```
 
-### CI train-loop gate
+CRA repairs only **feasible** zero-positive ground-truth objects using sparse
+alternating paths over official TAL top-k candidates. Each anchor retains a
+single GT owner, and existing GT coverage cannot decrease. The prototype
+synchronizes sparse candidates to CPU during assignment; its training
+throughput, GPU memory, DDP and torch.compile compatibility remain unverified.
 
-`python scripts/smoke_train.py --mechanism none --assignment cra` runs a
-single synthetic CPU epoch through the **real** Ultralytics training loop,
-including optimizer setup, forward/backward, checkpoint save and finalization.
-This is a functional regression test, not evidence of accuracy or throughput.
+## Verification and releases / 测试与版本管理
+
+- `python -m pytest -q`: standalone geometry, assignment, CLI and data tests.
+- `python -m pytest -q tests/test_integration_api.py`: real pinned YOLO26
+  model construction, forward/backward and original criterion checks.
+- `python scripts/smoke_train.py --mechanism none --assignment cra`:
+  one synthetic CPU training epoch through the actual Ultralytics trainer.
+- `.github/workflows/release.yml`: runs test gates before creating a
+  tagged source ZIP on version changes. No datasets or weights in releases.
+
+Current stable tag: **v0.3.0**. The CRA implementation on `main` is a
+**v0.4.0 candidate** until the full train-loop gate and release succeed.
+
+## Research limitations / 研究边界
+
+1. No CrowdHuman full training or official AP/mMR/JI result is published.
+2. Ignore regions are preserved as metadata but not yet loss-masked.
+3. CFSR overlap labels are rectangle-overlap proxies, **not** true visible
+   occlusion maps.
+4. CRA coverage gains in synthetic collisions do not establish detection gains.
+5. Novelty requires a documented comparison against assignment and
+   crowd-detection prior art, not merely a new module name.
+
+See [EXPERIMENTS.md](docs/EXPERIMENTS.md) for the required controlled protocol.

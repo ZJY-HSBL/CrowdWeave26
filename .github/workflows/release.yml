@@ -24,6 +24,13 @@ jobs:
           python -m pip install -e ".[dev]"
       - name: Run tests before publication
         run: python -m pytest -q
+      - name: Install pinned Ultralytics YOLO26 for release gate
+        run: |
+          git clone --filter=blob:none https://github.com/ultralytics/ultralytics.git upstream
+          git -C upstream checkout --detach a0fd1d727fe5ef5c0f6837646f794eba5b0575f5
+          python -m pip install -e ./upstream
+      - name: Verify real YOLO26 graph before release
+        run: python -m pytest -q tests/test_integration_api.py
       - name: Build reproducible source ZIP
         shell: bash
         run: |

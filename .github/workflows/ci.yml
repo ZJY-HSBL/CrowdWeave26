@@ -24,3 +24,22 @@ jobs:
         run: python -m pytest -q
       - name: Compile
         run: python -m compileall -q crowdweave crowdweave26 scripts
+
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install pinned YOLO26
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+          git clone --filter=blob:none https://github.com/ultralytics/ultralytics.git upstream
+          git -C upstream checkout --detach a0fd1d727fe5ef5c0f6837646f794eba5b0575f5
+          python -m pip install -e ./upstream
+          python -m pip install -e ".[dev]"
+      - name: Verify YOLO26 real graph forward and gradients
+        run: python -m pytest -q tests/test_integration_api.py

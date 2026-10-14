@@ -25,7 +25,15 @@ class CrowdConflictE2ELoss(E2ELoss):
             return standard_loss, items
         logits = raw.get("crowd_conflict_logits")
         if logits is None:
-            raise ValueError("CFSR logits absent from training output")
+            # The pinned YOLO26 validator evaluates an inference-mode tuple,
+            # which deliberately does not expose auxiliary training logits.
+            # Keep the same four loss columns, but do not penalize this branch.
+            if not isinstance(preds, tuple):
+                raise ValueError("CFSR logits absent from training output")
+            zero = standard_loss.new_zeros(())
+            return torch.cat((standard_loss.flatten(), zero.reshape(1))), {
+                **items, "conflict_loss": zero
+            }
         auxiliary = conflict_bce(logits, batch) * self.conflict_weight * logits.shape[0]
         return torch.cat((standard_loss.flatten(), auxiliary.reshape(1))), {
             **items, "conflict_loss": auxiliary.detach() / logits.shape[0]

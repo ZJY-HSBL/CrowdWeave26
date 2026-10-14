@@ -134,3 +134,28 @@ def test_trainer_constructs_cra_graph(monkeypatch):
     model = trainer.get_model(cfg="yolo26n-p2.yaml", verbose=False)
     assert model.crowd_cra_enabled is True
     assert model.model[-1].nl == 4
+
+
+def test_cfsr_validation_uses_zero_auxiliary_loss():
+    import torch
+    from ultralytics.cfg import get_cfg
+    from crowdweave26.integration import CrowdSupervisedDetectionModel, install_crowdweave
+    model = CrowdSupervisedDetectionModel("yolo26n-p2.yaml", nc=1, verbose=False)
+    install_crowdweave(model, "both")
+    model.args = get_cfg()
+    model.crowd_conflict_weight = 0.25
+    model.crowd_cra_enabled = True
+    model.train()
+    batch = {
+        "img": torch.rand(1, 3, 96, 96),
+        "batch_idx": torch.tensor([0.0, 0.0]),
+        "cls": torch.tensor([[0.0], [0.0]]),
+        "bboxes": torch.tensor([[0.50, 0.50, 0.45, 0.60], [0.55, 0.52, 0.45, 0.60]]),
+    }
+    model.eval()
+    with torch.no_grad():
+        preds = model(batch["img"])
+        assert isinstance(preds, tuple)
+        loss, items = model.loss(batch, preds)
+    assert loss.numel() == 4 and torch.isfinite(loss).all()
+    assert "conflict_loss" in items and items["conflict_loss"] == 0

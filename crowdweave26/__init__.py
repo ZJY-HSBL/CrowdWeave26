@@ -4,4 +4,4 @@ from .losses import gotp_pairwise_loss, conflict_supervision_loss
 from .conflict import rasterize_overlap
 
 __all__ = ["SCADDownsample", "CFSRNeck", "gotp_pairwise_loss", "conflict_supervision_loss", "rasterize_overlap"]
-__version__ = "0.3.0"
+__version__ = "0.4.0"

@@ -15,7 +15,7 @@
   "research_modules_status": {
     "SCAD": "Integrated into YOLO26-P2",
     "CFSR": "Integrated with augmented GT-overlap auxiliary supervision",
-    "CRA": "Opt-in official TAL collision repair on main; training-loop smoke gate pending",
+    "CRA": "Opt-in official TAL collision repair; CRA-only and SCAD+CFSR+CRA synthetic training and validation gates pass",
     "GOTP": "Standalone only",
     "VGCR": "Proposed",
     "ACDT": "Proposed"

@@ -102,13 +102,15 @@ throughput, GPU memory, DDP and torch.compile compatibility remain unverified.
 - `python -m pytest -q`: standalone geometry, assignment, CLI and data tests.
 - `python -m pytest -q tests/test_integration_api.py`: real pinned YOLO26
   model construction, forward/backward and original criterion checks.
-- `python scripts/smoke_train.py --mechanism none --assignment cra`:
-  one synthetic CPU training epoch through the actual Ultralytics trainer.
+- `python scripts/smoke_train.py --mechanism none --assignment cra` and
+  `python scripts/smoke_train.py --mechanism both --assignment cra`:
+  synthetic CPU training epochs through the actual Ultralytics trainer,
+  including checkpoint finalization and validation.
 - `.github/workflows/release.yml`: runs test gates before creating a
   tagged source ZIP on version changes. No datasets or weights in releases.
 
-Current stable tag: **v0.3.0**. The CRA implementation on `main` is a
-**v0.4.0 candidate** until the full train-loop gate and release succeed.
+Current stable tag: **v0.4.0**. CRA-only and combined SCAD+CFSR+CRA
+synthetic one-epoch CPU train-loop gates pass; CrowdHuman accuracy remains untested.
 
 ## Research limitations / 研究边界
 

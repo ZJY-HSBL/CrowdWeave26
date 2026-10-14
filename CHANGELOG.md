@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased — v0.4.0 CRA candidate
+## v0.4.0 — 2026-10-15
 
 - Introduce Collision-Reserved Assignment (CRA) using deterministic sparse
   alternating paths to recover feasible GTs orphaned by official TAL collisions.
@@ -8,7 +8,8 @@
   `--assignment standard|cra` ablation switch.
 - Add randomized invariant tests, synthetic collision/long-chain tests, and
   real pinned-YOLO26 forward/backward criterion tests.
-- Add a full one-epoch synthetic Ultralytics CPU training gate before release.
+- Add one-epoch synthetic Ultralytics CPU training gates for CRA-only and SCAD+CFSR+CRA, including checkpoint and validation.
+- Correct validation-mode CFSR loss reporting when training-only conflict logits are unavailable.
 - Pin matching CPU PyTorch/torchvision versions for reliable CI and update
   the research matrix and upstream manifest.
 - Research boundary: no full CrowdHuman training, ignored-negative masking,

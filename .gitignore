@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+.env
+*.pt
+*.onnx
+*.engine
+runs/
+datasets/
+ultralytics-src/
+*.egg-info/
+.DS_Store

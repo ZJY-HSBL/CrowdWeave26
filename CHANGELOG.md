@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.1.1 — 2026-10-14
+
+- Added standalone CFSR spatial-conflict feature routing prototype.
+- Added independent SCAD/CFSR/GOTP components, rasterized overlap supervision, and gradient tests.
+- Corrected the test-gated Release workflow and reproducible, git-tracked source ZIP packaging.
+- Included experiment matrix, source manifest, model integration roadmap and protocol notes.
+- This patch release snapshots the latest passing research starter. No trained YOLO26 gains are claimed.
+
+
 ## v0.1.0 — 2026-10-14
 
 Research starter with pinned upstream YOLO26 revision.

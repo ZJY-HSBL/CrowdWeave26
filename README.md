@@ -5,7 +5,7 @@
 
 CrowdWeave26 develops six candidate mechanisms for dense pedestrian detection. This is a reproducible research project: proposed mechanisms are not assumed to be novel or beneficial until ablated and independently tested.
 
-## v0.1.0
+## v0.1.1
 - Pinned upstream Ultralytics YOLO26 baseline runner, including official P2 variants.
 - CrowdHuman ODGT converter retaining original head/visible/full boxes and ignored regions as metadata.
 - Standalone PyTorch SCAD, CFSR and GOTP research prototypes (not yet integrated into YOLO26).
@@ -46,4 +46,4 @@ The repository does not vendor Ultralytics or distribute datasets/weights. Upstr
 
 **Release policy:** bump VERSION on main to trigger an automated GitHub Release.
 
-The research modules in `crowdweave26/` are separate from the official baseline trainer in `crowdweave/cli.py`; they have **not** yet been connected to the Ultralytics model parser or optimized end-to-end. Run `python -m pytest -q` before any model training.
+v0.1.0 is retained as the initial snapshot; v0.1.1 contains the updated research prototypes and release tooling.\n\nThe research modules in `crowdweave26/` are separate from the official baseline trainer in `crowdweave/cli.py`; they have **not** yet been connected to the Ultralytics model parser or optimized end-to-end. Run `python -m pytest -q` before any model training.

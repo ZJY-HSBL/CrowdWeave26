@@ -29,7 +29,9 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - name: Create versioned GitHub Release
+        with:
+          fetch-depth: 0
+      - name: Publish release and immutable source ZIP
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -40,8 +42,19 @@ jobs:
             echo "Invalid VERSION: $version" >&2
             exit 1
           fi
+          asset="CrowdWeave26-${version}.zip"
           if gh release view "$version" >/dev/null 2>&1; then
-            echo "Release $version already exists. No overwrite."
-            exit 0
+            ref="$version"
+          else
+            ref="$GITHUB_SHA"
           fi
-          gh release create "$version" --target "$GITHUB_SHA" --title "CrowdWeave26 $version" --notes-file CHANGELOG.md
+          git archive --format=zip --prefix="CrowdWeave26-${version}/" --output="$asset" "$ref"
+          if gh release view "$version" >/dev/null 2>&1; then
+            if gh release view "$version" --json assets --jq '.assets[].name' | grep -Fxq "$asset"; then
+              echo "Release and ZIP already exist; refusing to overwrite versioned asset."
+              exit 0
+            fi
+            gh release upload "$version" "$asset"
+          else
+            gh release create "$version" "$asset" --target "$GITHUB_SHA" --title "CrowdWeave26 $version" --notes-file CHANGELOG.md
+          fi

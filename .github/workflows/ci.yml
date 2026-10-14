@@ -45,3 +45,5 @@ jobs:
         run: python -m pytest -q tests/test_integration_api.py
       - name: Train one synthetic epoch with CRA on CPU
         run: python scripts/smoke_train.py --mechanism none --assignment cra
+      - name: Train one synthetic epoch with SCAD CFSR and CRA
+        run: python scripts/smoke_train.py --mechanism both --assignment cra

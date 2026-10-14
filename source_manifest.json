@@ -1,0 +1,14 @@
+{
+  "repository": "https://github.com/ultralytics/ultralytics",
+  "upstream_commit": "a0fd1d727fe5ef5c0f6837646f794eba5b0575f5",
+  "checked_utc": "2026-10-14",
+  "source_reviewed": [
+    "ultralytics/cfg/models/26/yolo26.yaml",
+    "ultralytics/cfg/models/26/yolo26-p2.yaml",
+    "ultralytics/nn/modules/head.py",
+    "ultralytics/utils/loss.py",
+    "ultralytics/utils/tal.py",
+    "ultralytics/nn/tasks.py"
+  ],
+  "note": "Original design hypotheses; three independent prototypes only; no benchmark results."
+}

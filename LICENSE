@@ -1,0 +1,11 @@
+SPDX-License-Identifier: AGPL-3.0-or-later
+
+Copyright (c) 2026 CrowdWeave26 contributors.
+
+The independently developed code in this repository is offered under the
+GNU Affero General Public License, version 3 or (at your option) any later
+version. Read the complete license at:
+https://www.gnu.org/licenses/agpl-3.0.html
+
+Upstream Ultralytics uses AGPL-3.0 and commercial licensing. This repository
+does not vendor its source, weights or third-party training datasets.

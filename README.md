@@ -8,8 +8,8 @@ CrowdWeave26 develops six candidate mechanisms for dense pedestrian detection. T
 ## v0.1.0
 - Pinned upstream Ultralytics YOLO26 baseline runner, including official P2 variants.
 - CrowdHuman ODGT converter retaining original head/visible/full boxes and ignored regions as metadata.
-- Standalone PyTorch SCAD downsampling and GOTP pairwise loss research prototypes (not yet integrated into YOLO26).
-- Unit tests, CI, versioned Releases workflow, roadmap and experiment protocol.
+- Standalone PyTorch SCAD, CFSR and GOTP research prototypes (not yet integrated into YOLO26).
+- Unit tests and an automated, test-gated GitHub Releases workflow, plus a roadmap and experiment protocol.
 
 ### Windows setup
 ```powershell
@@ -37,7 +37,7 @@ python -m crowdweave.cli val --data D:/CrowdHuman/yolo/crowdhuman.yaml --weights
 Six candidates:
 1. SCAD — Spatial-Conflict Anti-Aliasing Downsampling (standalone prototype)
 2. VGCR — Visibility-Geometry Consistent Reconstruction (proposal)
-3. CFSR — Conflict-Field Scale Routing (proposal)
+3. CFSR — Conflict-Field Scale Routing (standalone prototype)
 4. CRA — Collision-Reserved Assignment (proposal)
 5. GOTP — GT-Overlap-Tolerant Pairwise Loss (standalone prototype)
 6. ACDT — Ambiguity-Calibrated Dual-Head Transfer (proposal)
@@ -45,3 +45,5 @@ Six candidates:
 The repository does not vendor Ultralytics or distribute datasets/weights. Upstream uses AGPL-3.0/commercial licensing; examine obligations before integrating and redistributing derivatives. Details: [Research roadmap](docs/ROADMAP.md), [Experiments](docs/EXPERIMENTS.md).
 
 **Release policy:** bump VERSION on main to trigger an automated GitHub Release.
+
+The research modules in `crowdweave26/` are separate from the official baseline trainer in `crowdweave/cli.py`; they have **not** yet been connected to the Ultralytics model parser or optimized end-to-end. Run `python -m pytest -q` before any model training.

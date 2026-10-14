@@ -1,0 +1,10 @@
+experiment,baseline,scad,vgcr,cfsr,cra,gotp,acdt,status
+B0,YOLO26n,0,0,0,0,0,0,pending
+B1,YOLO26n-p2,0,0,0,0,0,0,pending
+A1,YOLO26n,1,0,0,0,0,0,pending
+A2,YOLO26n,0,1,0,0,0,0,pending
+A3,YOLO26n,0,0,1,0,0,0,pending
+A4,YOLO26n,0,0,0,1,0,0,pending
+A5,YOLO26n,0,0,0,0,1,0,pending
+A6,YOLO26n,0,0,0,0,0,1,pending
+F1,YOLO26n,1,1,1,1,1,1,pending

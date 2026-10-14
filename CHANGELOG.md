@@ -2,9 +2,12 @@
 
 ## v0.1.0 — 2026-10-14
 
-- Initialize public CrowdWeave26 research project and pinned upstream YOLO26 bootstrap.
-- Add official YOLO26n/s, n/s-P2 baseline training and evaluation CLI.
-- Add CrowdHuman ODGT conversion preserving head/visible/full-body association and ignored annotation metadata.
-- Add standalone SCAD downsampling and GOTP box-overlap loss prototypes with gradient tests.
-- Add CI and automated versioned GitHub Releases.
-- Document limitations: no integration, no experimental measurements, no first-in-literature claims.
+Research starter with pinned upstream YOLO26 revision.
+- Baseline CLI for official YOLO26 standard and P2 configurations.
+- CrowdHuman ODGT conversion, preserving associated head/visible/full boxes and ignored metadata.
+- Standalone PyTorch SCAD, CFSR and GOTP prototypes; conflict overlap rasterization.
+- CPU unit tests, automated CI and test-gated release of source ZIP.
+- Research documentation, experimental conditions and reproducibility notes.
+
+No integrated custom YOLO26 detector, trained checkpoint, detection mAP,
+CrowdHuman mMR/JI, improvement claim or verified first-of-kind claim.

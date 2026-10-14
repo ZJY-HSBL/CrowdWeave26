@@ -27,7 +27,7 @@ def test_real_yolo26_training_criterion_has_finite_gradients():
         "bboxes": torch.tensor([[0.5, 0.5, 0.30, 0.50]]),
     }
     loss, items = model(batch)
-    assert bool(torch.isfinite(loss))
-    loss.backward()
+    assert bool(torch.isfinite(loss).all())
+    loss.sum().backward()
     assert model.model[3].detail[0].weight.grad is not None
     assert model.model[-1].crowd_cfsr_gain.grad is not None

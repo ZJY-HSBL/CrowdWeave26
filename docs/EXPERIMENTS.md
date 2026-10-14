@@ -13,3 +13,14 @@ Report small/medium/large and heavy-occlusion subsets where supported.
 Record parameters, GFLOPs at stated resolution, per-image GPU latency, GPU memory.
 Run at least 3 random seeds, with paired uncertainty intervals on key comparisons.
 Do not call modules novel without targeted prior-art comparison.
+
+
+## CRA experiment (v0.4.0 candidate)
+
+Compare the same YOLO26-P2 initialization and seeds with `--assignment standard`
+versus `--assignment cra` (and optionally repeat with `--mechanism both`).
+The assigner starts with official TAL and only repairs GTs with zero positives
+when a feasible augmenting path through existing top-k candidates exists.
+Measure positive coverage per batch, recovered GT fraction, batch training time
+and GPU synchronization overhead. Report negative results as well as improvements.
+The method does not fix ignored-region negatives and does not imply a benchmark gain.

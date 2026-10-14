@@ -3,13 +3,17 @@ from __future__ import annotations
 import torch
 from ultralytics.utils.loss import E2ELoss
 from .supervision import conflict_bce
+from .cra import upgrade_assigner
 
 
 class CrowdConflictE2ELoss(E2ELoss):
     """Preserve O2M/O2O loss decay and add a separately logged fourth component."""
 
-    def __init__(self, model, conflict_weight: float = 0.25):
+    def __init__(self, model, conflict_weight: float = 0.25, cra_enabled: bool = False):
         super().__init__(model)
+        if cra_enabled:
+            self.one2many.assigner = upgrade_assigner(self.one2many.assigner)
+            self.one2one.assigner = upgrade_assigner(self.one2one.assigner)
         if conflict_weight < 0:
             raise ValueError("conflict_weight must be nonnegative")
         self.conflict_weight = float(conflict_weight)

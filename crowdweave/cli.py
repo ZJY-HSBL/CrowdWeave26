@@ -21,6 +21,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--device", default="0")
     p.add_argument("--nms-free", action="store_true", help="Validate one-to-one without NMS")
     p.add_argument("--mechanism", choices=("none", "scad", "cfsr", "both"), default="none")
+    p.add_argument("--assignment", choices=("standard", "cra"), default="standard",
+                   help="Optional collision-reserved TAL matching, independent of SCAD/CFSR")
     p.add_argument("--conflict-weight", type=float, default=0.25,
                    help="CFSR auxiliary GT-overlap BCE gain, for cfsr/both training")
     p.add_argument("--project", default="runs/crowdweave26")
@@ -30,6 +32,8 @@ def build_parser() -> argparse.ArgumentParser:
 def run(args: argparse.Namespace) -> None:
     if args.mode == "val" and not args.weights:
         raise ValueError("Validation requires --weights")
+    if args.assignment == "cra" and args.mode != "train":
+        raise ValueError("CRA is a train-time assigner; validate its checkpoint without --assignment")
     if args.nms_free and args.mode != "val":
         raise ValueError("--nms-free is for validation only")
     if min(args.imgsz, args.batch, args.epochs) <= 0:
@@ -47,11 +51,14 @@ def run(args: argparse.Namespace) -> None:
     if args.mode == "train":
         kwargs = dict(**common, epochs=args.epochs, seed=args.seed, deterministic=True,
                       close_mosaic=min(20, args.epochs),
-                      name=f"yolo26_{args.variant}_{args.mechanism}_seed{args.seed}")
-        if args.mechanism != "none":
-            from crowdweave26.integration import CrowdWeaveTrainer, ENV_MODE, ENV_CONFLICT_WEIGHT
+                      name=f"yolo26_{args.variant}_{args.mechanism}_{args.assignment}_seed{args.seed}")
+        if args.mechanism != "none" or args.assignment == "cra":
+            from crowdweave26.integration import (
+                CrowdWeaveTrainer, ENV_MODE, ENV_CONFLICT_WEIGHT, ENV_CRA_ENABLED
+            )
             os.environ[ENV_MODE] = args.mechanism
             os.environ[ENV_CONFLICT_WEIGHT] = str(args.conflict_weight)
+            os.environ[ENV_CRA_ENABLED] = "1" if args.assignment == "cra" else "0"
             kwargs["trainer"] = CrowdWeaveTrainer
         model.train(**kwargs)
     else:

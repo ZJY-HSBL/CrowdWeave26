@@ -89,3 +89,27 @@ The audit counts images with valid-pedestrian IoU >= 0.3, box-overlap prevalence
 ignore-annotation incidence and valid-person boxes intersecting ignored rectangles.
 These statistics **do not** mask ignored pixels during network training, and they
 are not a substitute for the official CrowdHuman validation protocol.
+
+
+## Experimental CRA: collision-reserved assignment (v0.4.0 candidate)
+
+CRA wraps the official YOLO26 Task-Aligned Assigner with a sparse, deterministic
+augmenting-path recovery step. When multiple pedestrians compete for candidate
+anchors, a previously unrepresented person can receive a positive **only if**
+existing positives can be relocated without leaving another person uncovered.
+All candidate anchors come from official TAL top-k; each anchor has one owner.
+This is a **training-only**, opt-in research mechanism and may slow CUDA training
+because the prototype synchronizes sparse candidate lists to CPU.
+
+```powershell
+# Architecture-controlled CRA ablation
+python -m crowdweave.cli train --data D:/CrowdHuman/yolo/crowdhuman.yaml --variant n-p2 --mechanism none --assignment standard --seed 0
+python -m crowdweave.cli train --data D:/CrowdHuman/yolo/crowdhuman.yaml --variant n-p2 --mechanism none --assignment cra --seed 0
+
+# Combined SCAD + CFSR + CRA experiment
+python -m crowdweave.cli train --data D:/CrowdHuman/yolo/crowdhuman.yaml --variant n-p2 --mechanism both --assignment cra --conflict-weight 0.25 --seed 0
+```
+
+No real CrowdHuman train-time ignore mask, official AP/mMR/JI, multi-seed
+accuracy improvement, performance budget or first-of-kind novelty has been
+verified. Do not use the research prototype as an established SOTA result.

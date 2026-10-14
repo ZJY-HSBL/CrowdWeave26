@@ -20,6 +20,7 @@ from .modules import CFSRNeck, SCADDownsample
 MODES = ("none", "scad", "cfsr", "both")
 ENV_MODE = "CROWDWEAVE26_MODE"
 ENV_CONFLICT_WEIGHT = "CROWDWEAVE26_CONFLICT_WEIGHT"
+ENV_CRA_ENABLED = "CROWDWEAVE26_CRA_ENABLED"
 
 
 class CrowdDetect(Detect):
@@ -85,9 +86,11 @@ class CrowdSupervisedDetectionModel(DetectionModel):
     """Official YOLO26 model with a supervised, opt-in crowd auxiliary criterion."""
 
     def init_criterion(self):
-        if isinstance(self.model[-1], CrowdDetect):
-            weight = float(getattr(self, "crowd_conflict_weight", 0.25))
-            return CrowdConflictE2ELoss(self, conflict_weight=weight)
+        has_cfsr = isinstance(self.model[-1], CrowdDetect)
+        cra = bool(getattr(self, "crowd_cra_enabled", False))
+        if has_cfsr or cra:
+            weight = float(getattr(self, "crowd_conflict_weight", 0.25)) if has_cfsr else 0.0
+            return CrowdConflictE2ELoss(self, conflict_weight=weight, cra_enabled=cra)
         return super().init_criterion()
 
 
@@ -110,6 +113,7 @@ class CrowdWeaveTrainer(DetectionTrainer):
         if not 0.0 <= weight <= 10.0:
             raise ValueError("CFSR conflict supervision weight must be in [0, 10]")
         model.crowd_conflict_weight = weight
+        model.crowd_cra_enabled = os.environ.get(ENV_CRA_ENABLED, "0") == "1"
         if weights is not None:
             model.load(weights)
             if mode in ("scad", "both"):

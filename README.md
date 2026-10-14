@@ -113,3 +113,11 @@ python -m crowdweave.cli train --data D:/CrowdHuman/yolo/crowdhuman.yaml --varia
 No real CrowdHuman train-time ignore mask, official AP/mMR/JI, multi-seed
 accuracy improvement, performance budget or first-of-kind novelty has been
 verified. Do not use the research prototype as an established SOTA result.
+
+
+### CI train-loop gate
+
+`python scripts/smoke_train.py --mechanism none --assignment cra` runs a
+single synthetic CPU epoch through the **real** Ultralytics training loop,
+including optimizer setup, forward/backward, checkpoint save and finalization.
+This is a functional regression test, not evidence of accuracy or throughput.

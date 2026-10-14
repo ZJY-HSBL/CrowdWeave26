@@ -43,3 +43,5 @@ jobs:
           python -m pip install -e ".[dev]"
       - name: Verify YOLO26 real graph forward and gradients
         run: python -m pytest -q tests/test_integration_api.py
+      - name: Train one synthetic epoch with CRA on CPU
+        run: python scripts/smoke_train.py --mechanism none --assignment cra

@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.2.0 — 2026-10-14
+
+- Integrate experimental SCAD backbone downsampling and CFSR head fusion into official pinned YOLO26-P2.
+- Preserve official P2/P3/P4/P5 output scales and One-to-Many/One-to-One branches.
+- Add a custom Ultralytics trainer which installs the modules before pretrained-weight transfer.
+- Add four-mode official YOLO26 forward/backward contract tests and a synthetic-batch training criterion test to CI.
+- Gate GitHub Releases on both PyTorch unit tests and pinned-upstream integration tests.
+- Research boundary: no trained CrowdHuman metrics, no verified originality, no calibrated CFSR overlap supervision, no validated model export.
+
 ## v0.1.1 — 2026-10-14
 
 - Added standalone CFSR spatial-conflict feature routing prototype.

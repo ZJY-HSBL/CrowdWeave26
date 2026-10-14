@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 
 MODELS = {"n": "yolo26n.yaml", "s": "yolo26s.yaml", "n-p2": "yolo26n-p2.yaml", "s-p2": "yolo26s-p2.yaml"}
 
@@ -19,6 +20,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--device", default="0")
     p.add_argument("--nms-free", action="store_true", help="Validate one-to-one without NMS")
+    p.add_argument("--mechanism", choices=("none", "scad", "cfsr", "both"), default="none")
     p.add_argument("--project", default="runs/crowdweave26")
     return p
 
@@ -30,12 +32,23 @@ def run(args: argparse.Namespace) -> None:
         raise ValueError("--nms-free is for validation only")
     if min(args.imgsz, args.batch, args.epochs) <= 0:
         raise ValueError("imgsz, batch and epochs must be positive")
+    if args.mechanism != "none":
+        if args.mode != "train":
+            raise ValueError("Validate custom checkpoints without --mechanism")
+        if args.variant not in ("n-p2", "s-p2"):
+            raise ValueError("SCAD/CFSR require a P2 variant")
     from ultralytics import YOLO  # installed from pinned checkout, lazy import
     model = YOLO(args.weights or MODELS[args.variant])
     common = dict(data=args.data, imgsz=args.imgsz, batch=args.batch, device=args.device, project=args.project)
     if args.mode == "train":
-        model.train(**common, epochs=args.epochs, seed=args.seed, deterministic=True,
-                    close_mosaic=min(20, args.epochs), name=f"yolo26_{args.variant}_seed{args.seed}")
+        kwargs = dict(**common, epochs=args.epochs, seed=args.seed, deterministic=True,
+                      close_mosaic=min(20, args.epochs),
+                      name=f"yolo26_{args.variant}_{args.mechanism}_seed{args.seed}")
+        if args.mechanism != "none":
+            from crowdweave26.integration import CrowdWeaveTrainer, ENV_MODE
+            os.environ[ENV_MODE] = args.mechanism
+            kwargs["trainer"] = CrowdWeaveTrainer
+        model.train(**kwargs)
     else:
         metrics = model.val(**common, nms=not args.nms_free,
                             name="one_to_one" if args.nms_free else "one_to_many_nms")

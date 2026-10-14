@@ -61,7 +61,7 @@ python -m crowdweave.cli train --data D:/CrowdHuman/yolo/crowdhuman.yaml --varia
 For a controlled ablation, set `--mechanism scad`, `cfsr`, `both` or `none` (baseline). Validate custom checkpoints by loading them normally from a trusted source, with `crowdweave26` installed. This milestone confirms wiring only, not trained improvements. **CFSR logits are not yet overlap-supervised**, and neither CrowdHuman AP/mMR/JI nor export/deployment performance has been evaluated. The release does not contain trained CrowdHuman weights or validated benchmark improvements.
 
 
-## v0.3.0 development — supervised CFSR conflict field
+## v0.3.0 — supervised CFSR conflict field
 The supervised CFSR experiment now trains an auxiliary overlap logit from the **currently augmented**
 YOLO batch's full-body boxes. The target marks cells covered by at least two trainable rectangles;
 this is a *box-overlap proxy*, not ground-truth visible-area occlusion. The loss is a bounded,
@@ -76,3 +76,16 @@ augmentation does not geometrically transform that metadata into a training igno
 The auxiliary target excludes ignored labels from the positive set but is *not* ignore-aware negative
 supervision. Do not equate these experiments with protocol-correct CrowdHuman AP/mMR/JI.
 No real dataset training gains, novel-mechanism precedence, multi-GPU or export claims.
+
+
+### Dataset quality audit (original-coordinate GT and ignore boxes)
+
+```powershell
+python -m crowdweave.audit --metadata D:/CrowdHuman/yolo/metadata --split train
+python -m crowdweave.audit --metadata D:/CrowdHuman/yolo/metadata --split val
+```
+
+The audit counts images with valid-pedestrian IoU >= 0.3, box-overlap prevalence,
+ignore-annotation incidence and valid-person boxes intersecting ignored rectangles.
+These statistics **do not** mask ignored pixels during network training, and they
+are not a substitute for the official CrowdHuman validation protocol.

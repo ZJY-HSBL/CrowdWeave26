@@ -5,10 +5,10 @@
 
 CrowdWeave26 develops six candidate mechanisms for dense pedestrian detection. This is a reproducible research project: proposed mechanisms are not assumed to be novel or beneficial until ablated and independently tested.
 
-## v0.1.1
+## Current release v0.1.1
 - Pinned upstream Ultralytics YOLO26 baseline runner, including official P2 variants.
 - CrowdHuman ODGT converter retaining original head/visible/full boxes and ignored regions as metadata.
-- Standalone PyTorch SCAD, CFSR and GOTP research prototypes (not yet integrated into YOLO26).
+- SCAD/CFSR now have opt-in YOLO26-P2 graph integration on the development branch; GOTP remains standalone.
 - Unit tests and an automated, test-gated GitHub Releases workflow, plus a roadmap and experiment protocol.
 
 ### Windows setup
@@ -46,4 +46,16 @@ The repository does not vendor Ultralytics or distribute datasets/weights. Upstr
 
 **Release policy:** bump VERSION on main to trigger an automated GitHub Release.
 
-v0.1.0 is retained as the initial snapshot; v0.1.1 contains the updated research prototypes and release tooling.\n\nThe research modules in `crowdweave26/` are separate from the official baseline trainer in `crowdweave/cli.py`; they have **not** yet been connected to the Ultralytics model parser or optimized end-to-end. Run `python -m pytest -q` before any model training.
+v0.1.0 is retained as the initial snapshot; v0.1.1 contains the updated research prototypes and release tooling.\n\nThe research modules in `crowdweave26/` are separate from the official baseline trainer in `crowdweave/cli.py`; SCAD/CFSR are installed via a custom trainer rather than changing the upstream YAML parser; there are still no trained benchmark results. Run `python -m pytest -q` before any model training.
+
+
+## Development milestone — v0.2.0 candidate
+
+Experimental SCAD/CFSR integration is now available on `main` for the **official pinned YOLO26-P2** architecture. SCAD replaces backbone layer 3 (P2→P3 stride-2); CFSR uses the existing P2/P3/P4 feature maps to refine the P3 input of the original Detect head, retaining all four detection scales and both One-to-Many and One-to-One branches. Ultralytics would normally reconstruct the detector during training, so `CrowdWeaveTrainer.get_model` installs the modules before weight transfer.
+
+```powershell
+python scripts/smoke_integration.py --mode both --imgsz 96
+python -m crowdweave.cli train --data D:/CrowdHuman/yolo/crowdhuman.yaml --variant n-p2 --mechanism both --device 0 --batch 4 --epochs 200
+```
+
+For a controlled ablation, set `--mechanism scad`, `cfsr`, `both` or `none` (baseline). Validate custom checkpoints by loading them normally from a trusted source, with `crowdweave26` installed. This milestone confirms wiring only, not trained improvements. **CFSR logits are not yet overlap-supervised**, and neither CrowdHuman AP/mMR/JI nor export/deployment performance has been evaluated. The development snapshot may not match the latest release tag until remote integration checks pass.

@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased — CRA matching telemetry
+
+- Add per-epoch `cra_coverage.csv` for One-to-Many and One-to-One matching.
+- Exclude validation matching from training counters; preserve existing loss structure.
+- Add a regression gate requiring the real one-epoch synthetic trainer to write both branch records.
+- No real CrowdHuman improvement claims.
+
+
+
 ## v0.4.0 — 2026-10-15
 
 - Introduce Collision-Reserved Assignment (CRA) using deterministic sparse

@@ -159,3 +159,28 @@ def test_cfsr_validation_uses_zero_auxiliary_loss():
         loss, items = model.loss(batch, preds)
     assert loss.numel() == 4 and torch.isfinite(loss).all()
     assert "conflict_loss" in items and items["conflict_loss"] == 0
+
+
+
+def test_cra_counts_and_validation_exclusion():
+    import torch
+    from ultralytics.cfg import get_cfg
+    from crowdweave26.integration import CrowdSupervisedDetectionModel
+    model = CrowdSupervisedDetectionModel("yolo26n-p2.yaml", nc=1, verbose=False)
+    model.args = get_cfg()
+    model.crowd_cra_enabled = True
+    batch = {
+        "img": torch.rand(1, 3, 96, 96),
+        "batch_idx": torch.tensor([0.0, 0.0]),
+        "cls": torch.tensor([[0.0], [0.0]]),
+        "bboxes": torch.tensor([[0.5, 0.5, .4, .6], [.52, .5, .4, .6]]),
+    }
+    model.train()
+    model(batch)
+    assigner = model.criterion.one2many.assigner
+    before = dict(assigner.cumulative_cra_stats)
+    assert before["calls"] > 0
+    model.eval()
+    with torch.no_grad():
+        model.loss(batch, model(batch["img"]))
+    assert assigner.cumulative_cra_stats == before

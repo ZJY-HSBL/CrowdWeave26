@@ -51,6 +51,15 @@ def run(mechanism="none", assignment="cra"):
             project=str(root/"runs"), name="smoke", exist_ok=True,
         )
         assert (root/"runs"/"smoke"/"weights"/"last.pt").is_file()
+        if assignment == "cra":
+            import csv
+            report = root/"runs"/"smoke"/"cra_coverage.csv"
+            assert report.is_file(), "CRA epoch statistics were not written"
+            with report.open(newline="", encoding="utf-8") as stream:
+                rows = list(csv.DictReader(stream))
+            assert len(rows) == 2
+            assert {r["branch"] for r in rows} == {"one2many", "one2one"}
+            assert all(int(row["calls"]) >= 1 for row in rows)
         print("Synthetic one-epoch CPU train complete:", mechanism, assignment)
 
 

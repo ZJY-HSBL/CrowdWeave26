@@ -13,6 +13,21 @@ from .assignment import repair_coverage
 class CrowdReservedAssigner(TaskAlignedAssigner):
     """Recover feasible zero-positive GTs without stealing a donor's last positive."""
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.collect_cra_stats = True
+        self.cumulative_cra_stats = {
+            "calls": 0, "orphans_before": 0, "orphans_after": 0,
+            "recovered": 0, "changed_anchors": 0,
+        }
+
+    def _record_cra_stats(self):
+        if not self.collect_cra_stats:
+            return
+        self.cumulative_cra_stats["calls"] += 1
+        for key in ("orphans_before", "orphans_after", "recovered", "changed_anchors"):
+            self.cumulative_cra_stats[key] += self.last_cra_stats[key]
+
     def select_highest_overlaps(self, mask_pos, overlaps, n_max_boxes, align_metric):
         candidate_mask = mask_pos.bool()
         gt_idx, fg_mask, selected = super().select_highest_overlaps(
@@ -21,11 +36,13 @@ class CrowdReservedAssigner(TaskAlignedAssigner):
         self.last_cra_stats = dict(orphans_before=0, orphans_after=0, recovered=0, changed_anchors=0)
         bs, ng, na = candidate_mask.shape
         if not ng or not na:
+            self._record_cra_stats()
             return gt_idx, fg_mask, selected
 
         counts = torch.zeros((bs, ng), dtype=torch.long, device=gt_idx.device)
         counts.scatter_add_(1, gt_idx.long(), fg_mask.long())
         if not bool(((counts == 0) & candidate_mask.any(-1)).any()):
+            self._record_cra_stats()
             return gt_idx, fg_mask, selected
 
         k = min(self.topk, na)
@@ -67,6 +84,7 @@ class CrowdReservedAssigner(TaskAlignedAssigner):
             selected[b, new, indices] = 1
             gt_idx[b, indices] = new.to(gt_idx.dtype)
             fg_mask[b, indices] = 1
+        self._record_cra_stats()
         return gt_idx, fg_mask, selected
 
 

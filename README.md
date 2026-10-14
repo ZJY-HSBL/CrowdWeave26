@@ -123,3 +123,13 @@ synthetic one-epoch CPU train-loop gates pass; CrowdHuman accuracy remains untes
    crowd-detection prior art, not merely a new module name.
 
 See [EXPERIMENTS.md](docs/EXPERIMENTS.md) for the required controlled protocol.
+
+
+### Development: CRA coverage telemetry
+
+The `main` branch additionally records `cra_coverage.csv` for CRA-enabled
+training. The log contains **per-epoch, per-branch** matcher calls, feasible
+orphan GTs before/after recovery, recovered GTs and changed candidate owners.
+Validation loss matching does not contribute to these training counters.
+This file describes matching coverage, **not** official CrowdHuman AP/mMR/JI.
+The telemetry is process-local; distributed aggregation is not yet supported.

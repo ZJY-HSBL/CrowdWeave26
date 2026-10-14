@@ -12,8 +12,10 @@ from torch import nn
 from ultralytics.models.yolo.detect.train import DetectionTrainer
 from ultralytics.nn.modules.head import Detect
 from ultralytics.nn.tasks import DetectionModel
+from ultralytics.utils import DEFAULT_CFG
 
 from .criterion import CrowdConflictE2ELoss
+from .telemetry import record_cra_epoch
 
 from .modules import CFSRNeck, SCADDownsample
 
@@ -100,6 +102,10 @@ class CrowdWeaveTrainer(DetectionTrainer):
     The environment variable makes the mode visible to Ultralytics DDP
     workers; multi-GPU behavior must still be independently validated.
     """
+
+    def __init__(self, cfg=DEFAULT_CFG, overrides=None, _callbacks=None):
+        super().__init__(cfg=cfg, overrides=overrides, _callbacks=_callbacks)
+        self.add_callback("on_train_epoch_end", record_cra_epoch)
 
     def get_model(self, cfg=None, weights=None, verbose=True):
         model = self.set_model_names_for_load(

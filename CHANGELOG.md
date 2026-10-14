@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased — CRA matching telemetry
+## v0.4.1 — 2026-10-15 CRA matching telemetry
 
 - Add per-epoch `cra_coverage.csv` for One-to-Many and One-to-One matching.
 - Exclude validation matching from training counters; preserve existing loss structure.

@@ -109,7 +109,7 @@ throughput, GPU memory, DDP and torch.compile compatibility remain unverified.
 - `.github/workflows/release.yml`: runs test gates before creating a
   tagged source ZIP on version changes. No datasets or weights in releases.
 
-Current stable tag: **v0.4.0**. CRA-only and combined SCAD+CFSR+CRA
+Current stable tag: **v0.4.1**. CRA-only and combined SCAD+CFSR+CRA
 synthetic one-epoch CPU train-loop gates pass; CrowdHuman accuracy remains untested.
 
 ## Research limitations / 研究边界
@@ -125,7 +125,7 @@ synthetic one-epoch CPU train-loop gates pass; CrowdHuman accuracy remains untes
 See [EXPERIMENTS.md](docs/EXPERIMENTS.md) for the required controlled protocol.
 
 
-### Development: CRA coverage telemetry
+### v0.4.1: CRA coverage telemetry
 
 The `main` branch additionally records `cra_coverage.csv` for CRA-enabled
 training. The log contains **per-epoch, per-branch** matcher calls, feasible

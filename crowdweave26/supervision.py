@@ -8,7 +8,6 @@ from __future__ import annotations
 import torch
 import torch.nn.functional as F
 from .conflict import rasterize_overlap
-from .ignore import ignored_feature_mask
 
 
 def overlap_targets(batch: dict, output_hw: tuple[int, int], *, device=None) -> torch.Tensor:
@@ -54,8 +53,14 @@ def conflict_bce(logits: torch.Tensor, batch: dict, *, max_pos_weight: float = 2
     target = overlap_targets(batch, logits.shape[-2:], device=logits.device).to(logits.dtype)
     if target.shape != logits.shape:
         raise ValueError("logits and batch shape differ")
-    valid = ~ignored_feature_mask(batch, logits.shape[-2:], device=logits.device)
-    valid = valid.to(dtype=logits.dtype)
+    if "ignore_bboxes" in batch:
+        # Standalone loss prototypes must work without Ultralytics installed.
+        from .ignore import ignored_feature_mask
+        valid = (~ignored_feature_mask(
+            batch, logits.shape[-2:], device=logits.device
+        )).to(dtype=logits.dtype)
+    else:
+        valid = torch.ones_like(target)
     pos = (target * valid).sum()
     neg = valid.sum() - pos
     weight = (neg / pos.clamp_min(1)).clamp(min=1, max=max_pos_weight).detach()

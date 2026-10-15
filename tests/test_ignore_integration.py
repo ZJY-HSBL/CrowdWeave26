@@ -19,7 +19,7 @@ def test_mask_multiple_images_and_anchor_geometry():
         "ignore_bboxes": torch.tensor([[.25,.25,.3,.3],[.75,.75,.3,.3]]),
         "ignore_batch_idx": torch.tensor([0.,1.]),
     }
-    pts = torch.tensor([[16.,16.],[48.,48.],[8.,8.]])
+    pts = torch.tensor([[16.,16.],[48.,48.],[1.,1.]])
     mask = ignored_anchor_mask(batch,pts,torch.ones(3,1))
     assert mask.tolist() == [[True,False,False],[False,True,False]]
     feature = ignored_feature_mask(batch,(4,4),device=pts.device)

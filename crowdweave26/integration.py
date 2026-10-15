@@ -13,7 +13,7 @@ from ultralytics.models.yolo.detect.train import DetectionTrainer
 from ultralytics.nn.modules.head import Detect
 from ultralytics.nn.tasks import DetectionModel
 from ultralytics.utils import DEFAULT_CFG, colorstr
-from ultralytics.nn.tasks import unwrap_model
+from ultralytics.utils.torch_utils import unwrap_model
 from .ignore import CrowdHumanIgnoredDataset
 
 from .criterion import CrowdConflictE2ELoss

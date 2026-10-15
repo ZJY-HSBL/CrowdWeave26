@@ -118,3 +118,36 @@ def test_ignore_aware_loss_only_reduces_unmatched_background_bce():
     assert torch.allclose(ignored_loss[[0,2]],baseline_loss[[0,2]],atol=1e-5)
     ignored_loss.sum().backward()
     assert model.model[-1].cv2[0][0].conv.weight.grad is not None
+
+
+
+def test_all_ignored_cfsr_grid_yields_zero_auxiliary_loss():
+    from crowdweave26.supervision import conflict_bce
+    x=torch.randn(1,1,8,8,requires_grad=True)
+    sample={
+        "img":torch.zeros(1,3,64,64),
+        "batch_idx":torch.zeros(0),
+        "bboxes":torch.zeros(0,4),
+        "ignore_bboxes":torch.tensor([[.5,.5,1.,1.]]),
+        "ignore_batch_idx":torch.tensor([0.]),
+    }
+    loss=conflict_bce(x,sample)
+    assert loss.item() == pytest.approx(0.)
+    loss.backward()
+    assert torch.equal(x.grad,torch.zeros_like(x.grad))
+
+
+def test_missing_ignore_metadata_rejected(tmp_path):
+    train=tmp_path/"images"/"train"
+    labels=tmp_path/"labels"/"train"
+    train.mkdir(parents=True)
+    labels.mkdir(parents=True)
+    Image.new("RGB",(96,96)).save(train/"sample.jpg")
+    (labels/"sample.txt").write_text("0 0.2 0.2 0.1 0.1\n")
+    cfg=get_cfg(overrides={"mosaic":0.0})
+    with pytest.raises(FileNotFoundError,match="ignored_train.json"):
+        CrowdHumanIgnoredDataset(
+            img_path=str(train),imgsz=96,batch_size=1,augment=True,
+            cache=False,hyp=cfg,rect=False,task="detect",
+            data={"path":str(tmp_path),"nc":1,"names":{0:"person"}}
+        )

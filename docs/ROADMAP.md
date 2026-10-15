@@ -15,3 +15,11 @@
 
 Only implemented and verified milestones may be released. Passing synthetic
 tests cannot substitute for real CrowdHuman metrics or establish novelty.
+
+
+- **v0.6.0:** opt-in synchronized ignored-region negative suppression through
+  Mosaic, affine scaling, translation and horizontal flips; baseline and
+  combined synthetic one-epoch training gates.
+- **Next:** GPU overhead, DDP support and real CrowdHuman training/validation
+  on an identical dataset/split, optimizer budget and fixed seed. Contrast
+  no-ignore and ignore-aware baselines before attributing changes to CRA/CFSR.

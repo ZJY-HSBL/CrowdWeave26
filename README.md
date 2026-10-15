@@ -109,7 +109,7 @@ throughput, GPU memory, DDP and torch.compile compatibility remain unverified.
 - `.github/workflows/release.yml`: runs test gates before creating a
   tagged source ZIP on version changes. No datasets or weights in releases.
 
-Current stable tag: **v0.5.0**. CRA-only and combined SCAD+CFSR+CRA
+Current stable tag: **v0.6.0**. CRA-only and combined SCAD+CFSR+CRA
 synthetic one-epoch CPU train-loop gates pass; CrowdHuman accuracy remains untested.
 
 ## Research limitations / 研究边界
@@ -166,7 +166,7 @@ one after seeing test results. This version tests the evaluation implementation
 on synthetic fixtures but does not include real pretrained detection weights.
 
 
-## Development — ignore-aware negative suppression (v0.6.0 candidate)
+## v0.6.0 — ignore-aware negative suppression
 
 `--ignore-aware` causes all ignored CrowdHuman full-body boxes to join the
 original Ultralytics instance stream as sentinel class -1 **before** Mosaic,

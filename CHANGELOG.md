@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased — v0.6.0 ignore-aware training candidate
+## v0.6.0 — 2026-10-15 ignore-aware negative suppression
 
 - Carry excluded annotations through original YOLO26 Mosaic, affine and flip geometries.
 - Disentangle augmented ignore boxes from trainable person targets after formatting.

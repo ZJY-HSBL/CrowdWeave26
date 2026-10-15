@@ -18,14 +18,16 @@
     "CRA": "Opt-in official TAL collision repair; CRA-only and SCAD+CFSR+CRA synthetic training and validation gates pass",
     "GOTP": "Standalone only",
     "VGCR": "Proposed",
-    "ACDT": "Proposed"
+    "ACDT": "Proposed",
+    "IgnoreAwareTraining": "Opt-in synchronized native Mosaic/flip geometry; mask unmatched background BCE and auxiliary CFSR BCE; synthetic CPU training verified"
   },
   "evaluation_limits": [
-    "No actual CrowdHuman validation dataset run or AP/mMR/JI values yet",
-    "No ignore-aware negative loss masking during training",
-    "No multi-seed accuracy improvements established",
-    "No novelty verified or prior-art-precedence established",
-    "CRA sparse repair currently synchronizes CPU and can affect throughput"
+    "No actual CrowdHuman training or reference AP/mMR/JI results",
+    "Ignore mask is an axis-aligned rectangle proxy; not pixel-accurate",
+    "CopyPaste/CutMix/DDP and GPU-speed impact unverified",
+    "No paired multi-seed accuracy improvement evidence",
+    "CRA CPU sync may reduce throughput",
+    "No novelty or SOTA claims established"
   ],
   "license_note": "Ultralytics AGPL-3.0/commercial license applies to upstream and derivatives as appropriate",
   "reference_evaluator": {

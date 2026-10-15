@@ -50,3 +50,16 @@ def test_reference_apmr_ji_with_ignore(tmp_path):
     control = evaluate(annotation,control_dt,control_ji,Path(REFERENCE))
     assert result["AP"] == pytest.approx(control["AP"], abs=1e-8)
     assert result["mMR"] == pytest.approx(control["mMR"], abs=1e-8)
+
+
+
+def test_evaluator_rejects_misaligned_record_ids(tmp_path):
+    from crowdweave.official_metrics import verify_alignment
+    gt = tmp_path/"gt.odgt"
+    det = tmp_path/"dt.odgt"
+    ji = tmp_path/"ji.odgt"
+    gt.write_text(json.dumps({"ID":"a","gtboxes":[]})+"\n")
+    det.write_text(json.dumps({"ID":"b","dtboxes":[]})+"\n")
+    ji.write_text(json.dumps({"ID":"a","gtboxes":[]})+"\n")
+    with pytest.raises(ValueError, match="ordered IDs"):
+        verify_alignment(gt,det,ji)

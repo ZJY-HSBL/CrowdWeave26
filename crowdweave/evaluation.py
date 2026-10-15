@@ -80,8 +80,13 @@ def make_evaluation_records(annotation, width, height, detections):
         box = gt.get("fbox")
         if box is None:
             raise ValueError("CrowdHuman gtboxes element has no fbox")
-        rect = _box_xywh(box, width, height)
-        if rect is None:
+        # Preserve raw GT geometry: the pinned reference JI toolkit applies
+        # its own image-border clipping, just like its AP/MR counterpart.
+        # Our exporter only clips predictions; never silently clip or drop GT.
+        if len(box) != 4:
+            raise ValueError("Invalid GT full-body box dimension")
+        rect = [float(v) for v in box]
+        if any(not math.isfinite(v) for v in rect) or min(rect[2:]) <= 0:
             raise ValueError("Invalid GT full-body box; refusing a silent benchmark change")
         ji_gt.append({"box": rect, "tag": -1 if ignore else 1})
     joined = {**det_record, "gtboxes": ji_gt}

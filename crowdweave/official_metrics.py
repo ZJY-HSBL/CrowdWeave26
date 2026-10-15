@@ -27,10 +27,39 @@ def _verify_root(root: Path):
     return root
 
 
+
+
+def _ids_from(path, *, key):
+    """Load record IDs with strict duplicate/missing-value checking."""
+    ids = []
+    with Path(path).open(encoding="utf-8") as handle:
+        for line_no, line in enumerate(handle, 1):
+            if not line.strip():
+                continue
+            item = json.loads(line)
+            if not isinstance(item.get("ID"), str) or not isinstance(item.get(key), list):
+                raise ValueError(f"Invalid {key} benchmark record on line {line_no}: {path}")
+            ids.append(item["ID"])
+    if not ids or len(set(ids)) != len(ids):
+        raise ValueError(f"Empty or duplicate IDs: {path}")
+    return ids
+
+
+def verify_alignment(gt, dt, joined):
+    """Require every prediction and JI annotation to match original GT ID order."""
+    ground_truth = _ids_from(gt, key="gtboxes")
+    detections = _ids_from(dt, key="dtboxes")
+    ji = _ids_from(joined, key="gtboxes")
+    if ground_truth != detections or ground_truth != ji:
+        raise ValueError("GT, detection and JI records must share the same ordered IDs")
+    return len(ground_truth)
+
+
 def evaluate(gt, dt, joined, evaluator_root):
     """Compute official-toolkit AP and MR, and serial JI via official JI functions."""
     root = _verify_root(Path(evaluator_root))
     gt, dt, joined = (Path(p).resolve() for p in (gt, dt, joined))
+    verify_alignment(gt, dt, joined)
     folder = str(root/"evaluate")
     sys.path.insert(0, folder)
     sys.path.insert(0, str(root))

@@ -81,3 +81,10 @@ def test_invalid_gt_never_silently_removed():
     a["gtboxes"][0]["fbox"] = [5,5,0,40]
     with pytest.raises(ValueError):
         make_evaluation_records(a,100,80,[])
+
+
+
+def test_preserves_original_outside_image_gt_coordinates():
+    ann = {"ID": "out", "gtboxes": [{"tag": "person", "fbox": [-2, 3, 10, 12]}]}
+    _, joined = make_evaluation_records(ann, 100, 100, [])
+    assert joined["gtboxes"][0]["box"] == [-2., 3., 10., 12.]

@@ -1,0 +1,8 @@
+{
+  "project": "CrowdDetection",
+  "repository": "https://github.com/megvii-model/CrowdDetection",
+  "commit": "9786f58869a55af3e0b51fc78f8638a825dae4a2",
+  "benchmark": "CrowdHuman full-body AP, Caltech log-average MR, JI",
+  "metrics_implementation": "reference AP/MR functions and JI matcher/gather; JI iterates serially instead of subprocesses",
+  "license_note": "Source stays in a separate user-provided checkout; verify the reference repository's license before reuse"
+}

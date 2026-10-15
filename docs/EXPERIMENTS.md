@@ -24,3 +24,34 @@ when a feasible augmenting path through existing top-k candidates exists.
 Measure positive coverage per batch, recovered GT fraction, batch training time
 and GPU synchronization overhead. Report negative results as well as improvements.
 The method does not fix ignored-region negatives and does not imply a benchmark gain.
+
+
+## CrowdHuman reference evaluation adapter (v0.5.0 candidate)
+
+The `crowdweave.evaluation` exporter reads the **original validation ODGT**
+(not YOLO training labels) and emits separate `detections.odgt` and
+`ji_joined.odgt` files. The detection boxes are clipped original-image
+`[x, y, width, height]` rectangles, with detector confidence.
+All original full-body ignore annotations are preserved and tagged -1 in JI.
+The AP/MR evaluator receives the **unmodified** original GT ODGT.
+
+The toolkit is the public CrowdDetection reference repository at the commit
+recorded in `reference_evaluator.json`; only the matching and metric code is
+used, and **not redistributed**. We invoke its AP, MR and JI matching
+algorithms, orchestrating JI serially for reproducibility.
+
+Example (PowerShell, run from this repository):
+```powershell
+git clone https://github.com/megvii-model/CrowdDetection.git official-crowd
+git -C official-crowd checkout --detach 9786f58869a55af3e0b51fc78f8638a825dae4a2
+python -m pip install numpy tqdm
+python -m crowdweave.evaluation --odgt D:/CrowdHuman/annotation_val.odgt --images D:/CrowdHuman/Images --weights path/to/best.pt --output D:/CrowdHuman/reports/run01 --device 0 --conf 0.001 --max-det 1000
+python -m crowdweave.official_metrics --odgt D:/CrowdHuman/annotation_val.odgt --detections D:/CrowdHuman/reports/run01/detections.odgt --ji-joined D:/CrowdHuman/reports/run01/ji_joined.odgt --evaluator-root official-crowd --report D:/CrowdHuman/reports/run01/official_metrics.json
+```
+
+Use the same confidence floor, input resolution, max detections, NMS settings,
+checkpoint selection and official annotation split for all comparisons.
+A synthetic reference-evaluator CI test checks ignored-region matching but
+**is not** a CrowdHuman measured result. Training-time ignore-aware background
+losses remain unimplemented, so do not assert parity with results whose
+training policy correctly masks ignored negatives.

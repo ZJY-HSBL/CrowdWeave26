@@ -133,3 +133,18 @@ orphan GTs before/after recovery, recovered GTs and changed candidate owners.
 Validation loss matching does not contribute to these training counters.
 This file describes matching coverage, **not** official CrowdHuman AP/mMR/JI.
 The telemetry is process-local; distributed aggregation is not yet supported.
+
+
+## CrowdHuman reference AP/mMR/JI (experimental v0.5.0)
+
+The evaluation adapter exports original-image-coordinate `dtboxes`, preserves
+non-person and explicitly ignored annotations for reference matching, and
+runs the pinned CrowdDetection AP/MR and JI metric implementations.
+The reference toolkit remains a **separate checkout**.
+
+See [docs/EXPERIMENTS.md](docs/EXPERIMENTS.md) for the exact two commands,
+evaluator SHA, reproducibility settings and dataset requirements.
+
+**Boundary:** this closes the prediction-to-evaluation format gap but does
+not implement ignored-region loss masking during training; no actual trained
+CrowdHuman accuracy numbers have been produced.

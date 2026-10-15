@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased — reference CrowdHuman evaluation adapter (v0.5.0 candidate)
+
+- Export original-image YOLO26 detections to official CrowdHuman ODGT box format.
+- Preserve full-body ignored GT boxes in AP/MR and JI reference evaluation.
+- Pin external CrowdDetection evaluator code and test AP/MR/JI against ignored synthetic instances.
+- Keep reference toolkit, datasets and model weights out of the project archive.
+- No complete CrowdHuman benchmark or train-time ignored-negative loss masking.
+
+
+
 ## v0.4.1 — 2026-10-15 CRA matching telemetry
 
 - Add per-epoch `cra_coverage.csv` for One-to-Many and One-to-One matching.

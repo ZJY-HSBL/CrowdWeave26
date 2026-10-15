@@ -35,6 +35,15 @@ jobs:
         run: python scripts/smoke_train.py --mechanism none --assignment cra
       - name: Verify combined SCAD CFSR CRA train loop
         run: python scripts/smoke_train.py --mechanism both --assignment cra
+      - name: Install pinned CrowdDetection benchmark toolkit
+        run: |
+          python -m pip install numpy tqdm
+          git clone --filter=blob:none https://github.com/megvii-model/CrowdDetection.git official-crowd
+          git -C official-crowd checkout --detach 9786f58869a55af3e0b51fc78f8638a825dae4a2
+      - name: Verify official CrowdHuman AP MR JI adapter
+        env:
+          CROWDWEAVE_REFERENCE_EVAL: official-crowd
+        run: python -m pytest -q tests/test_official_evaluation.py
       - name: Build reproducible source ZIP
         shell: bash
         run: |

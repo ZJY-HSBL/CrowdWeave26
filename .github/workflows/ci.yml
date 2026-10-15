@@ -47,3 +47,26 @@ jobs:
         run: python scripts/smoke_train.py --mechanism none --assignment cra
       - name: Train one synthetic epoch with SCAD CFSR and CRA
         run: python scripts/smoke_train.py --mechanism both --assignment cra
+
+
+  crowdhuman_reference:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install reference evaluator dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+          python -m pip install pytest numpy tqdm
+      - name: Clone pinned CrowdDetection evaluation reference
+        run: |
+          git clone --filter=blob:none https://github.com/megvii-model/CrowdDetection.git official-crowd
+          git -C official-crowd checkout --detach 9786f58869a55af3e0b51fc78f8638a825dae4a2
+      - name: Verify ignore-aware AP MR JI reference pipeline
+        env:
+          CROWDWEAVE_REFERENCE_EVAL: official-crowd
+        run: python -m pytest -q tests/test_official_evaluation.py

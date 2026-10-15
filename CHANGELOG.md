@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased — v0.6.0 ignore-aware training candidate
+
+- Carry excluded annotations through original YOLO26 Mosaic, affine and flip geometries.
+- Disentangle augmented ignore boxes from trainable person targets after formatting.
+- Mask only unmatched background-classification anchors in ignored regions.
+- Mask ignored cells in CFSR auxiliary supervision and retain positive TAL box losses.
+- Gate actual one-epoch synthetic combined training with nonzero Mosaic and scale.
+- No real CrowdHuman benchmark accuracy or GPU speed claim.
+
+
+
 ## v0.5.0 — 2026-10-15 CrowdHuman reference evaluation
 
 - Export original-image YOLO26 detections to official CrowdHuman ODGT box format.

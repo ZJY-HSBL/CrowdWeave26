@@ -45,6 +45,10 @@ jobs:
         run: python -m pytest -q tests/test_integration_api.py
       - name: Verify YOLO26 NMS and NMS-free inference API
         run: python -m pytest -q tests/test_evaluation_inference_api.py
+      - name: Verify native Mosaic flip ignore geometry and masked gradients
+        run: python -m pytest -q tests/test_ignore_integration.py
+      - name: Train one epoch with ignore-aware Mosaic SCAD CFSR CRA
+        run: python scripts/smoke_train.py --mechanism both --assignment cra --ignore-aware --mosaic
       - name: Train one synthetic epoch with CRA on CPU
         run: python scripts/smoke_train.py --mechanism none --assignment cra
       - name: Train one synthetic epoch with SCAD CFSR and CRA

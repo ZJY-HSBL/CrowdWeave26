@@ -55,3 +55,18 @@ A synthetic reference-evaluator CI test checks ignored-region matching but
 **is not** a CrowdHuman measured result. Training-time ignore-aware background
 losses remain unimplemented, so do not assert parity with results whose
 training policy correctly masks ignored negatives.
+
+
+## Ignore-aware train-time matching (v0.6.0 candidate)
+
+With `--ignore-aware`, CrowdHuman ignored fboxes are inserted into the
+**same** Ultralytics Instances stream as ordinary GT before Mosaic, resizing,
+translation and flips, then removed from positive GT immediately after native
+augmentation. The ignore rectangles mask background-only classification BCE
+at their final transformed anchor-center positions; foreground TAL matches
+remain supervised. CFSR overlap BCE excludes cells inside ignored rectangles.
+
+Compare both with and without this option in matched-budget baselines, and
+report the ignore-aware setting for every ablation. Native box transforms
+provide conservative axis-aligned approximations, not precise ignore polygons.
+The official reference validation evaluator from v0.5.0 remains separate.

@@ -164,3 +164,26 @@ Use `--nms-free` when specifically evaluating the one-to-one inference
 branch; report both branches separately rather than selecting the stronger
 one after seeing test results. This version tests the evaluation implementation
 on synthetic fixtures but does not include real pretrained detection weights.
+
+
+## Development — ignore-aware negative suppression (v0.6.0 candidate)
+
+`--ignore-aware` causes all ignored CrowdHuman full-body boxes to join the
+original Ultralytics instance stream as sentinel class -1 **before** Mosaic,
+affine resize and flip. A custom final Format removes the sentinels from
+positive targets and passes their transformed boxes to the criterion.
+Within these regions, only **unmatched classification background anchors**
+are excluded from BCE; actual assigned person positives are preserved.
+The CFSR auxiliary conflict BCE likewise ignores masked feature-grid cells.
+
+```powershell
+python -m crowdweave.cli train --data D:/CrowdHuman/yolo/crowdhuman.yaml --variant n-p2 --mechanism both --assignment cra --ignore-aware --seed 0
+```
+
+This is opt-in to permit strictly matched baseline controls; it requires
+`metadata/ignored_train.json` and fails if metadata are missing. Ignore
+regions are rectangle approximations under geometric warps, **not**
+pixel-accurate segmentation masks. Copy-paste and CutMix are not validated;
+the research CLI defaults must retain those augmentations disabled for
+ignore-aware training. Multi-GPU/DDP and production-speed benchmarks remain
+unverified.

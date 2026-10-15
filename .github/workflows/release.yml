@@ -33,6 +33,10 @@ jobs:
         run: python -m pytest -q tests/test_integration_api.py
       - name: Verify YOLO26 NMS and NMS-free inference API
         run: python -m pytest -q tests/test_evaluation_inference_api.py
+      - name: Verify native ignore geometry and class masking
+        run: python -m pytest -q tests/test_ignore_integration.py
+      - name: Verify ignore-aware augmented training
+        run: python scripts/smoke_train.py --mechanism both --assignment cra --ignore-aware --mosaic
       - name: Verify one-epoch CRA training smoke
         run: python scripts/smoke_train.py --mechanism none --assignment cra
       - name: Verify combined SCAD CFSR CRA train loop

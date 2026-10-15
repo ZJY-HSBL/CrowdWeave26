@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased — reference CrowdHuman evaluation adapter (v0.5.0 candidate)
+## v0.5.0 — 2026-10-15 CrowdHuman reference evaluation
 
 - Export original-image YOLO26 detections to official CrowdHuman ODGT box format.
 - Preserve full-body ignored GT boxes in AP/MR and JI reference evaluation.

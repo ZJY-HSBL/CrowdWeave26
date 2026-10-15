@@ -1,14 +1,17 @@
-# CrowdWeave26 research milestones
+# CrowdWeave26 reproducible research roadmap
 
-- v0.1.0: pinned YOLO26 baseline, CrowdHuman conversion and standalone research prototypes.
-- v0.2.0: SCAD/CFSR opt-in YOLO26-P2 graph integration with upstream contract tests.
-- v0.3.0: augmented-batch full-body GT-overlap CFSR supervision and CrowdHuman metadata audit.
-- v0.4.0 candidate: CRA sparse augmenting-path positive reservation on official O2M/O2O TAL.
-- Next: ignore-aware negative training (must transform ignored geometry with augmentation),
-  VGCR head/visible/full-body geometry, GOTP unique-GT pairing and ACDT transfer.
-- v1.0.0 target: six-way controlled ablations with official CrowdHuman AP/mMR/JI,
-  multi-seed paired intervals, CityPersons transfer and GPU throughput/latency.
+- **v0.1.0:** fixed official YOLO26 source and baseline tools.
+- **v0.2.0:** opt-in SCAD/CFSR YOLO26-P2 architecture integration.
+- **v0.3.0:** CFSR live augmented full-body overlap supervision and annotation audit.
+- **v0.4.0:** CRA sparse augmenting-path collision-reserved assignment.
+- **v0.4.1:** per-epoch O2M/O2O CRA coverage telemetry.
+- **v0.5.0:** official CrowdDetection reference metric adapter for CrowdHuman
+  AP, mMR and JI; validation ignore handling and paired NMS/NMS-free export.
+- **Next:** train-time ignored-negative masking with geometrically consistent
+  image transformations; real dataset training and verified reference metrics.
+  VGCR, GOTP integration and ACDT remain independently gated hypotheses.
+- **v1.0.0 target:** controlled six-mechanism multi-seed CrowdHuman ablations,
+  CityPersons transfer, and GPU latency/memory/params/GFLOPs evaluation.
 
-**Research policy:** no originality or accuracy claims without prior-art screening,
-matched-budget training, official evaluation and measured overhead. CRA is opt-in
-because sparse repair currently incurs CPU synchronization on GPU.
+Only implemented and verified milestones may be released. Passing synthetic
+tests cannot substitute for real CrowdHuman metrics or establish novelty.

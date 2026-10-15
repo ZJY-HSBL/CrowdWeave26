@@ -109,7 +109,7 @@ throughput, GPU memory, DDP and torch.compile compatibility remain unverified.
 - `.github/workflows/release.yml`: runs test gates before creating a
   tagged source ZIP on version changes. No datasets or weights in releases.
 
-Current stable tag: **v0.4.1**. CRA-only and combined SCAD+CFSR+CRA
+Current stable tag: **v0.5.0**. CRA-only and combined SCAD+CFSR+CRA
 synthetic one-epoch CPU train-loop gates pass; CrowdHuman accuracy remains untested.
 
 ## Research limitations / 研究边界
@@ -135,7 +135,7 @@ This file describes matching coverage, **not** official CrowdHuman AP/mMR/JI.
 The telemetry is process-local; distributed aggregation is not yet supported.
 
 
-## CrowdHuman reference AP/mMR/JI (experimental v0.5.0)
+## CrowdHuman reference AP/mMR/JI (v0.5.0)
 
 The evaluation adapter exports original-image-coordinate `dtboxes`, preserves
 non-person and explicitly ignored annotations for reference matching, and
@@ -148,3 +148,19 @@ evaluator SHA, reproducibility settings and dataset requirements.
 **Boundary:** this closes the prediction-to-evaluation format gap but does
 not implement ignored-region loss masking during training; no actual trained
 CrowdHuman accuracy numbers have been produced.
+
+
+### Commands: original CrowdHuman AP/mMR/JI protocol
+
+```powershell
+git clone https://github.com/megvii-model/CrowdDetection.git official-crowd
+git -C official-crowd checkout --detach 9786f58869a55af3e0b51fc78f8638a825dae4a2
+python -m pip install numpy tqdm
+python -m crowdweave.evaluation --odgt D:/CrowdHuman/annotation_val.odgt --images D:/CrowdHuman/Images --weights path/to/best.pt --output D:/CrowdHuman/reports/experiment1 --conf 0.001 --max-det 1000 --device 0
+python -m crowdweave.official_metrics --odgt D:/CrowdHuman/annotation_val.odgt --detections D:/CrowdHuman/reports/experiment1/detections.odgt --ji-joined D:/CrowdHuman/reports/experiment1/ji_joined.odgt --evaluator-root official-crowd --report D:/CrowdHuman/reports/experiment1/official_metrics.json
+```
+
+Use `--nms-free` when specifically evaluating the one-to-one inference
+branch; report both branches separately rather than selecting the stronger
+one after seeing test results. This version tests the evaluation implementation
+on synthetic fixtures but does not include real pretrained detection weights.

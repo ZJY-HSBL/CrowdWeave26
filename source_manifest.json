@@ -21,11 +21,16 @@
     "ACDT": "Proposed"
   },
   "evaluation_limits": [
-    "No official CrowdHuman AP/mMR/JI",
-    "No ignore-aware negative training mask",
-    "No multi-seed measured accuracy gain",
-    "No novelty verification",
-    "CRA CPU synchronization may impact throughput"
+    "No actual CrowdHuman validation dataset run or AP/mMR/JI values yet",
+    "No ignore-aware negative loss masking during training",
+    "No multi-seed accuracy improvements established",
+    "No novelty verified or prior-art-precedence established",
+    "CRA sparse repair currently synchronizes CPU and can affect throughput"
   ],
-  "license_note": "Ultralytics AGPL-3.0/commercial license applies to upstream and derivatives as appropriate"
+  "license_note": "Ultralytics AGPL-3.0/commercial license applies to upstream and derivatives as appropriate",
+  "reference_evaluator": {
+    "repository": "https://github.com/megvii-model/CrowdDetection",
+    "commit": "9786f58869a55af3e0b51fc78f8638a825dae4a2",
+    "status": "reference metric functions exercised with synthetic ignored-GT cases; no real dataset scores"
+  }
 }

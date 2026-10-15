@@ -1,12 +1,14 @@
 """Live augmented YOLO batch supervision for dense person box overlaps.
 
 Targets represent >=2 non-ignored, trainable full-body rectangles per feature cell,
-NOT semantic crowd density or visible-area occlusion. Ignore masks are NOT applied.
+NOT semantic crowd density or visible-area occlusion. Ignore masks are
+applied to the auxiliary loss if synchronized ignore boxes are provided.
 """
 from __future__ import annotations
 import torch
 import torch.nn.functional as F
 from .conflict import rasterize_overlap
+from .ignore import ignored_feature_mask
 
 
 def overlap_targets(batch: dict, output_hw: tuple[int, int], *, device=None) -> torch.Tensor:
@@ -52,7 +54,12 @@ def conflict_bce(logits: torch.Tensor, batch: dict, *, max_pos_weight: float = 2
     target = overlap_targets(batch, logits.shape[-2:], device=logits.device).to(logits.dtype)
     if target.shape != logits.shape:
         raise ValueError("logits and batch shape differ")
-    pos = target.sum()
-    neg = target.numel() - pos
+    valid = ~ignored_feature_mask(batch, logits.shape[-2:], device=logits.device)
+    valid = valid.to(dtype=logits.dtype)
+    pos = (target * valid).sum()
+    neg = valid.sum() - pos
     weight = (neg / pos.clamp_min(1)).clamp(min=1, max=max_pos_weight).detach()
-    return F.binary_cross_entropy_with_logits(logits, target, pos_weight=weight)
+    per_cell = F.binary_cross_entropy_with_logits(
+        logits, target, pos_weight=weight, reduction="none"
+    )
+    return (per_cell * valid).sum() / valid.sum().clamp_min(1)

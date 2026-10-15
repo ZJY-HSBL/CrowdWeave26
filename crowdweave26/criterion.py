@@ -4,13 +4,19 @@ import torch
 from ultralytics.utils.loss import E2ELoss
 from .supervision import conflict_bce
 from .cra import upgrade_assigner
+from .ignore_loss import IgnoreAwareDetectionLoss
 
 
 class CrowdConflictE2ELoss(E2ELoss):
     """Preserve O2M/O2O loss decay and add a separately logged fourth component."""
 
-    def __init__(self, model, conflict_weight: float = 0.25, cra_enabled: bool = False):
-        super().__init__(model)
+    def __init__(self, model, conflict_weight: float = 0.25,
+                 cra_enabled: bool = False, ignore_aware: bool = False):
+        super().__init__(
+            model, loss_fn=IgnoreAwareDetectionLoss if ignore_aware else __import__(
+                "ultralytics.utils.loss", fromlist=["v8DetectionLoss"]
+            ).v8DetectionLoss
+        )
         if cra_enabled:
             self.one2many.assigner = upgrade_assigner(self.one2many.assigner)
             self.one2one.assigner = upgrade_assigner(self.one2one.assigner)

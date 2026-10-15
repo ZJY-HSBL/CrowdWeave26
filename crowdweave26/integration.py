@@ -12,7 +12,9 @@ from torch import nn
 from ultralytics.models.yolo.detect.train import DetectionTrainer
 from ultralytics.nn.modules.head import Detect
 from ultralytics.nn.tasks import DetectionModel
-from ultralytics.utils import DEFAULT_CFG
+from ultralytics.utils import DEFAULT_CFG, colorstr
+from ultralytics.nn.tasks import unwrap_model
+from .ignore import CrowdHumanIgnoredDataset
 
 from .criterion import CrowdConflictE2ELoss
 from .telemetry import record_cra_epoch
@@ -23,6 +25,7 @@ MODES = ("none", "scad", "cfsr", "both")
 ENV_MODE = "CROWDWEAVE26_MODE"
 ENV_CONFLICT_WEIGHT = "CROWDWEAVE26_CONFLICT_WEIGHT"
 ENV_CRA_ENABLED = "CROWDWEAVE26_CRA_ENABLED"
+ENV_IGNORE_AWARE = "CROWDWEAVE26_IGNORE_AWARE"
 
 
 class CrowdDetect(Detect):
@@ -90,9 +93,12 @@ class CrowdSupervisedDetectionModel(DetectionModel):
     def init_criterion(self):
         has_cfsr = isinstance(self.model[-1], CrowdDetect)
         cra = bool(getattr(self, "crowd_cra_enabled", False))
-        if has_cfsr or cra:
+        ignore = bool(getattr(self, "crowd_ignore_aware", False))
+        if has_cfsr or cra or ignore:
             weight = float(getattr(self, "crowd_conflict_weight", 0.25)) if has_cfsr else 0.0
-            return CrowdConflictE2ELoss(self, conflict_weight=weight, cra_enabled=cra)
+            return CrowdConflictE2ELoss(
+                self, conflict_weight=weight, cra_enabled=cra, ignore_aware=ignore
+            )
         return super().init_criterion()
 
 
@@ -107,6 +113,21 @@ class CrowdWeaveTrainer(DetectionTrainer):
         super().__init__(cfg=cfg, overrides=overrides, _callbacks=_callbacks)
         self.add_callback("on_train_epoch_end", record_cra_epoch)
 
+    def build_dataset(self, img_path, mode="train", batch=None):
+        if mode != "train" or os.environ.get(ENV_IGNORE_AWARE, "0") != "1":
+            return super().build_dataset(img_path, mode, batch)
+        if self.args.single_cls or self.args.classes is not None:
+            raise ValueError("ignore-aware dataset requires unfiltered person class labels")
+        gs = max(int(unwrap_model(self.model).stride.max()), 32)
+        return CrowdHumanIgnoredDataset(
+            img_path=img_path, imgsz=self.args.imgsz, batch_size=batch,
+            augment=True, hyp=self.args, rect=self.args.rect,
+            cache=self.args.cache or None, single_cls=False,
+            stride=gs, pad=0.0, prefix=colorstr("train: "),
+            task="detect", classes=None, data=self.data,
+            fraction=self.args.fraction,
+        )
+
     def get_model(self, cfg=None, weights=None, verbose=True):
         model = self.set_model_names_for_load(
             CrowdSupervisedDetectionModel(
@@ -120,6 +141,7 @@ class CrowdWeaveTrainer(DetectionTrainer):
             raise ValueError("CFSR conflict supervision weight must be in [0, 10]")
         model.crowd_conflict_weight = weight
         model.crowd_cra_enabled = os.environ.get(ENV_CRA_ENABLED, "0") == "1"
+        model.crowd_ignore_aware = os.environ.get(ENV_IGNORE_AWARE, "0") == "1"
         if weights is not None:
             model.load(weights)
             if mode in ("scad", "both"):

@@ -23,6 +23,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--mechanism", choices=("none", "scad", "cfsr", "both"), default="none")
     p.add_argument("--assignment", choices=("standard", "cra"), default="standard",
                    help="Optional collision-reserved TAL matching, independent of SCAD/CFSR")
+    p.add_argument("--ignore-aware", action="store_true",
+                   help="Transform CrowdHuman ignore boxes and mask unmatched negative BCE anchors")
     p.add_argument("--conflict-weight", type=float, default=0.25,
                    help="CFSR auxiliary GT-overlap BCE gain, for cfsr/both training")
     p.add_argument("--project", default="runs/crowdweave26")
@@ -32,6 +34,8 @@ def build_parser() -> argparse.ArgumentParser:
 def run(args: argparse.Namespace) -> None:
     if args.mode == "val" and not args.weights:
         raise ValueError("Validation requires --weights")
+    if args.ignore_aware and args.mode != "train":
+        raise ValueError("--ignore-aware only changes training")
     if args.assignment == "cra" and args.mode != "train":
         raise ValueError("CRA is a train-time assigner; validate its checkpoint without --assignment")
     if args.nms_free and args.mode != "val":
@@ -51,14 +55,16 @@ def run(args: argparse.Namespace) -> None:
     if args.mode == "train":
         kwargs = dict(**common, epochs=args.epochs, seed=args.seed, deterministic=True,
                       close_mosaic=min(20, args.epochs),
-                      name=f"yolo26_{args.variant}_{args.mechanism}_{args.assignment}_seed{args.seed}")
-        if args.mechanism != "none" or args.assignment == "cra":
+                      name=f"yolo26_{args.variant}_{args.mechanism}_{args.assignment}_{'ignore' if args.ignore_aware else 'default'}_seed{args.seed}")
+        if args.mechanism != "none" or args.assignment == "cra" or args.ignore_aware:
             from crowdweave26.integration import (
-                CrowdWeaveTrainer, ENV_MODE, ENV_CONFLICT_WEIGHT, ENV_CRA_ENABLED
+                CrowdWeaveTrainer, ENV_MODE, ENV_CONFLICT_WEIGHT, ENV_CRA_ENABLED,
+                ENV_IGNORE_AWARE
             )
             os.environ[ENV_MODE] = args.mechanism
             os.environ[ENV_CONFLICT_WEIGHT] = str(args.conflict_weight)
             os.environ[ENV_CRA_ENABLED] = "1" if args.assignment == "cra" else "0"
+            os.environ[ENV_IGNORE_AWARE] = "1" if args.ignore_aware else "0"
             kwargs["trainer"] = CrowdWeaveTrainer
         model.train(**kwargs)
     else:

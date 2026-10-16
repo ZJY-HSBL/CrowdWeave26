@@ -1,5 +1,6 @@
 """Pinned YOLO26 GOTP criterion, isolated from standalone research primitives."""
 from __future__ import annotations
+import torch
 from ultralytics.utils.loss import v8DetectionLoss
 from .ignore_loss import IgnoreAwareDetectionLoss
 from .gotp import representative_pair_loss

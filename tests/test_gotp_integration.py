@@ -73,3 +73,42 @@ def test_max_gt_subsampling_is_stable_and_finite():
     pred,gt,fg,idx,q=_example()
     loss=representative_pair_loss(pred,gt,fg,idx,q,max_gt=2)
     assert torch.isfinite(loss)
+
+
+
+def test_pair_counters_report_violation_instead_of_just_zero_loss():
+    pred,gt,fg,idx,q=_example()
+    loss, numbers=representative_pair_loss(
+        pred,gt,fg,idx,q,return_stats=True
+    )
+    assert torch.allclose(loss,representative_pair_loss(pred,gt,fg,idx,q))
+    # Unique GT=2, one eligible neighboring pair, one violation, one image.
+    assert numbers.tolist() == [2.,1.,1.,1.]
+
+
+def test_zero_loss_distinguishes_satisfied_pair_from_absent_pair():
+    pred,gt,fg,idx,q=_example()
+    same = gt.clone()
+    zero, stats = representative_pair_loss(
+        same,gt,fg,idx,q,return_stats=True
+    )
+    assert zero == 0 and stats.tolist() == [2.,1.,0.,1.]
+    fg.zero_()
+    no_pairs, absent = representative_pair_loss(
+        same,gt,fg,idx,q,return_stats=True
+    )
+    assert no_pairs == 0 and absent.tolist() == [0.,0.,0.,0.]
+
+
+def test_empty_minibatch_statistics_preserve_zero_gradient():
+    pred=torch.empty(0,0,4,requires_grad=True)
+    gt=pred.detach()
+    loss, stats=representative_pair_loss(
+        pred,gt,torch.zeros(0,0,dtype=torch.bool),
+        torch.zeros(0,0,dtype=torch.long),
+        torch.zeros(0,0,1),return_stats=True
+    )
+    assert stats.tolist() == [0.,0.,0.,0.]
+    assert loss.item() == 0.
+    loss.backward()
+    assert pred.grad is not None

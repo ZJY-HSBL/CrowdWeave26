@@ -245,3 +245,25 @@ def test_gotp_combined_with_cra_cfsr_ignore_and_validation():
         val_loss, val_items = model.loss(batch, model(batch["img"]))
     assert val_loss.shape == train_loss.shape and torch.isfinite(val_loss).all()
     assert val_items["conflict_loss"] == 0
+
+
+
+def test_gotp_counters_exclude_eval_mode():
+    import torch
+    from ultralytics.cfg import get_cfg
+    from crowdweave26.integration import CrowdSupervisedDetectionModel
+    model=CrowdSupervisedDetectionModel("yolo26n-p2.yaml",nc=1,verbose=False)
+    model.args=get_cfg()
+    model.crowd_gotp_weight=0.15
+    batch={"img":torch.rand(1,3,96,96),
+           "batch_idx":torch.tensor([0.,0.]),
+           "cls":torch.zeros(2,1),
+           "bboxes":torch.tensor([[.44,.5,.4,.55],[.55,.5,.4,.55]])}
+    model.train()
+    model(batch)
+    first=model.criterion.one2many.gotp_running.clone()
+    assert first[0] == 1
+    model.eval()
+    with torch.no_grad():
+        model.loss(batch,model(batch["img"]))
+    assert torch.equal(first,model.criterion.one2many.gotp_running)

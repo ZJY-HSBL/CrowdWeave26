@@ -17,7 +17,7 @@ from ultralytics.utils.torch_utils import unwrap_model
 from .ignore import CrowdHumanIgnoredDataset
 
 from .criterion import CrowdConflictE2ELoss
-from .telemetry import record_cra_epoch
+from .telemetry import record_cra_epoch, record_gotp_epoch
 
 from .modules import CFSRNeck, SCADDownsample
 
@@ -117,6 +117,7 @@ class CrowdWeaveTrainer(DetectionTrainer):
     def __init__(self, cfg=DEFAULT_CFG, overrides=None, _callbacks=None):
         super().__init__(cfg=cfg, overrides=overrides, _callbacks=_callbacks)
         self.add_callback("on_train_epoch_end", record_cra_epoch)
+        self.add_callback("on_train_epoch_end", record_gotp_epoch)
 
     def build_dataset(self, img_path, mode="train", batch=None):
         if mode != "train" or os.environ.get(ENV_IGNORE_AWARE, "0") != "1":

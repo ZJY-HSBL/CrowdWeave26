@@ -66,6 +66,15 @@ def run(mechanism="none", assignment="cra", ignore_aware=False, mosaic=False,
             project=str(root/"runs"), name="smoke", exist_ok=True,
         )
         assert (root/"runs"/"smoke"/"weights"/"last.pt").is_file()
+        if gotp_weight > 0:
+            import csv
+            file = root/"runs"/"smoke"/"gotp_pairs.csv"
+            assert file.is_file(), "No GOTP per-epoch pair activity CSV"
+            with file.open(encoding="utf-8", newline="") as stream:
+                measurements = list(csv.DictReader(stream))
+            assert len(measurements) == 2
+            assert {row["branch"] for row in measurements} == {"one2many", "one2one"}
+            assert all(int(row["calls"]) > 0 for row in measurements)
         if assignment == "cra":
             import csv
             report = root/"runs"/"smoke"/"cra_coverage.csv"

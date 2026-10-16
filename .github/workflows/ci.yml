@@ -47,6 +47,12 @@ jobs:
         run: python -m pytest -q tests/test_evaluation_inference_api.py
       - name: Verify native Mosaic flip ignore geometry and masked gradients
         run: python -m pytest -q tests/test_ignore_integration.py
+      - name: Verify real official GOTP O2M O2O criterion
+        run: python -m pytest -q tests/test_integration_api.py -k gotp
+      - name: Train baseline CRA with GOTP auxiliary enabled
+        run: python scripts/smoke_train.py --mechanism none --assignment cra --gotp-weight 0.15
+      - name: Train full ignore-aware Mosaic GOTP combination
+        run: python scripts/smoke_train.py --mechanism both --assignment cra --ignore-aware --mosaic --gotp-weight 0.15
       - name: Train one epoch with ignore-aware Mosaic SCAD CFSR CRA
         run: python scripts/smoke_train.py --mechanism both --assignment cra --ignore-aware --mosaic
       - name: Train one synthetic epoch with CRA on CPU

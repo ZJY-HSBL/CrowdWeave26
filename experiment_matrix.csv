@@ -12,3 +12,6 @@ SR1,n-p2,scad,cra,0,not_run,0,not_run
 CR1,n-p2,cfsr,cra,0.25,not_run,0,not_run
 SCR1,n-p2,both,cra,0.25,not_run,0,not_run
 SCR1_IGN,n-p2,both,cra,0.25,not_run,1,not_run
+GOTP1,n-p2,none,standard,0,not_run,1,not_run
+GOTP_CRA,n-p2,none,cra,0,not_run,1,not_run
+GOTP_FULL,n-p2,both,cra,0.25,not_run,1,not_run

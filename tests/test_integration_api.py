@@ -205,7 +205,7 @@ def test_unique_gt_gotp_loss_real_official_yolo26_backward():
     }
     loss, items = model(batch)
     assert loss.shape == (4,)
-    assert list(items) == ["box_loss", "cls_loss", "dfl_loss", "gotp_loss"]
+    assert list(items) == [*model.criterion.one2one.loss_names, "gotp_loss"]
     assert torch.isfinite(loss).all()
     assert isinstance(model.criterion.one2one, GOTPAwareDetectionLoss)
     loss.sum().backward()
@@ -235,7 +235,7 @@ def test_gotp_combined_with_cra_cfsr_ignore_and_validation():
     model.train()
     train_loss, items = model(batch)
     assert train_loss.shape == (5,)
-    assert list(items) == ["box_loss", "cls_loss", "dfl_loss",
+    assert list(items) == [*model.criterion.one2one.loss_names,
                            "gotp_loss", "conflict_loss"]
     assert torch.isfinite(train_loss).all()
     train_loss.sum().backward()

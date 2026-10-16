@@ -22,7 +22,8 @@ def representative_pair_loss(
     margin: float = 0.03,
     max_gt: int = 128,
     max_pairs: int = 4096,
-) -> torch.Tensor:
+    return_stats: bool = False,
+) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
     """Compute per-image mean over unique-GT matched predictions.
 
     Args:
@@ -41,10 +42,12 @@ def representative_pair_loss(
     if margin < 0 or max_gt < 2 or max_pairs < 1:
         raise ValueError("Require margin >= 0, max_gt >= 2, max_pairs >= 1")
     values = []
+    diagnostics = []  # rows: [unique GT people, close pairs, active pairs, images with pairs]
     for b in range(bs):
         available = fg_mask[b].bool().nonzero(as_tuple=False).flatten()
         if available.numel() < 2:
             values.append(pred_xyxy[b].sum() * 0.0)
+            diagnostics.append(pred_xyxy.new_zeros(4))
             continue
         gt_index = target_gt_idx[b, available].long()
         if bool((gt_index < 0).any()):
@@ -58,6 +61,7 @@ def representative_pair_loss(
             representatives.append(anchor)
         if len(representatives) < 2:
             values.append(pred_xyxy[b].sum() * 0.0)
+            diagnostics.append(pred_xyxy.new_tensor([float(len(representatives)),0,0,0]))
             continue
         selected = torch.stack(representatives)
         if selected.numel() > max_gt:
@@ -65,9 +69,26 @@ def representative_pair_loss(
             # torch.topk is deterministic for unequal scores; this is
             # explicit subset selection, not a claim to preserve all GTs.
             selected = selected[q.topk(max_gt).indices]
-        values.append(gotp_pairwise_loss(
-            pred_xyxy[b, selected], gt_xyxy[b, selected],
-            margin=margin, max_pairs=max_pairs, only_close_gt=True,
-        ))
-    return torch.stack(values).mean() if values else pred_xyxy.sum() * 0.0
+        if return_stats:
+            loss, pair_stats = gotp_pairwise_loss(
+                pred_xyxy[b, selected], gt_xyxy[b, selected],
+                margin=margin, max_pairs=max_pairs, only_close_gt=True,
+                return_stats=True,
+            )
+            diagnostics.append(torch.stack((
+                loss.detach().new_tensor(selected.numel()),
+                pair_stats[0], pair_stats[1],
+                (pair_stats[0] > 0).to(dtype=loss.dtype),
+            )))
+            values.append(loss)
+        else:
+            values.append(gotp_pairwise_loss(
+                pred_xyxy[b, selected], gt_xyxy[b, selected],
+                margin=margin, max_pairs=max_pairs, only_close_gt=True,
+            ))
+    total = torch.stack(values).mean() if values else pred_xyxy.sum() * 0.0
+    if return_stats:
+        sums = torch.stack(diagnostics).sum(0) if diagnostics else pred_xyxy.new_zeros(4)
+        return total, sums.detach()
+    return total
 

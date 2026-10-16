@@ -26,7 +26,8 @@ def _pair_iou(a: torch.Tensor, b: torch.Tensor) -> torch.Tensor:
 
 def gotp_pairwise_loss(pred_xyxy: torch.Tensor, gt_xyxy: torch.Tensor, *,
                        margin: float = 0.03, max_pairs: int = 10000,
-                       only_close_gt: bool = True) -> torch.Tensor:
+                       only_close_gt: bool = True,
+                       return_stats: bool = False) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
     """Penalize predicted overlap exceeding actual GT overlap + margin.
 
     Requires predictions already uniquely assigned to DIFFERENT ground-truth
@@ -38,7 +39,8 @@ def gotp_pairwise_loss(pred_xyxy: torch.Tensor, gt_xyxy: torch.Tensor, *,
         raise ValueError("margin>=0 and max_pairs>=1 required")
     n = pred_xyxy.shape[0]
     if n < 2:
-        return pred_xyxy.sum()*0.
+        zero = pred_xyxy.sum() * 0.
+        return (zero, zero.new_zeros(2)) if return_stats else zero
     gt = gt_xyxy.detach().to(device=pred_xyxy.device,dtype=pred_xyxy.dtype)
     a,b = torch.triu_indices(n,n,1,device=pred_xyxy.device)
     if only_close_gt:
@@ -48,7 +50,16 @@ def gotp_pairwise_loss(pred_xyxy: torch.Tensor, gt_xyxy: torch.Tensor, *,
         close=(centers[a]-centers[b]).norm(dim=1)<=1.5*length
         a,b=a[close],b[close]
     if a.numel() == 0:
-        return pred_xyxy.sum()*0.
+        zero = pred_xyxy.sum() * 0.
+        return (zero, zero.new_zeros(2)) if return_stats else zero
     a,b=a[:max_pairs],b[:max_pairs]
-    return F.relu(_pair_iou(pred_xyxy[a],pred_xyxy[b]) -
-                  _pair_iou(gt[a],gt[b]) - margin).mean()
+    excess = _pair_iou(pred_xyxy[a],pred_xyxy[b]) - _pair_iou(gt[a],gt[b]) - margin
+    loss = F.relu(excess).mean()
+    if not return_stats:
+        return loss
+    # [nearby pairs actually evaluated, pairs with positive penalty].
+    # Counts are tensors so the criterion can accumulate without syncing GPU.
+    with torch.no_grad():
+        stats = torch.stack((loss.detach().new_tensor(a.numel()),
+                             (excess.detach() > 0).sum().to(dtype=loss.dtype)))
+    return loss, stats

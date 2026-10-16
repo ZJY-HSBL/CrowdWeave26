@@ -18,6 +18,11 @@ class GOTPAwareDetectionLoss(IgnoreAwareDetectionLoss):
             raise ValueError("GOTP weight must lie in [0,10]")
         if not 0 <= self.gotp_margin <= 1:
             raise ValueError("GOTP margin must lie in [0,1]")
+        # [calls, matched_people, nearby_pairs, violating_pairs,
+        #  images_with_pairs, unweighted_loss_sum] on the criterion device.
+        # Converted to host values only at epoch end, not on every GPU batch.
+        self.gotp_running = torch.zeros(6, device=self.device, dtype=torch.float64)
+        self.collect_gotp_stats = True
 
     def get_assigned_targets_and_loss(self, preds, batch):
         if self.ignore_aware:
@@ -30,15 +35,25 @@ class GOTPAwareDetectionLoss(IgnoreAwareDetectionLoss):
         pred_distri = preds["boxes"].permute(0, 2, 1).contiguous()
         decoded = self.bbox_decode(anchor_points, pred_distri)
         predicted_pixels = decoded * stride_tensor
-        extra = representative_pair_loss(
+        raw_loss, diagnostics = representative_pair_loss(
             predicted_pixels, target_bboxes, fg_mask, idx,
             # TAL target scores aren't exposed by the official return
             # contract; recompute quality from target scores by re-assigner?
             # Instead use differentiable-free IoU of assigned GT and
             # detached decoded boxes as representative selection quality.
             _representative_quality(predicted_pixels.detach(), target_bboxes, fg_mask),
-            margin=self.gotp_margin, max_gt=self.gotp_max_gt
-        ) * self.gotp_weight
+            margin=self.gotp_margin, max_gt=self.gotp_max_gt,
+            return_stats=True
+        )
+        if self.collect_gotp_stats:
+            with torch.no_grad():
+                update = torch.cat((
+                    raw_loss.detach().new_ones(1),
+                    diagnostics.to(dtype=raw_loss.dtype),
+                    raw_loss.detach().reshape(1),
+                )).to(self.gotp_running.dtype)
+                self.gotp_running.add_(update)
+        extra = raw_loss * self.gotp_weight
         loss = torch.cat((base_loss, extra.reshape(1)))
         return loss * preds["boxes"].shape[0], {
             **items, "gotp_loss": extra.detach()

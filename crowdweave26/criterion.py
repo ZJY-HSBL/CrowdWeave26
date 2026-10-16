@@ -35,6 +35,8 @@ class CrowdConflictE2ELoss(E2ELoss):
         for sub in (self.one2many, self.one2one):
             if hasattr(sub.assigner, "collect_cra_stats"):
                 sub.assigner.collect_cra_stats = is_training_output
+            if hasattr(sub, "collect_gotp_stats"):
+                sub.collect_gotp_stats = is_training_output
         raw = preds[1] if isinstance(preds, tuple) else preds
         standard_loss, items = super().__call__(preds, batch)
         if self.conflict_weight == 0:

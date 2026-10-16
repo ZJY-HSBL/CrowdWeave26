@@ -1,22 +1,26 @@
 """Opt-in GT-overlap supervision with the pinned official YOLO26 E2E loss."""
 from __future__ import annotations
 import torch
-from ultralytics.utils.loss import E2ELoss
+from ultralytics.utils.loss import E2ELoss, v8DetectionLoss
 from .supervision import conflict_bce
 from .cra import upgrade_assigner
 from .ignore_loss import IgnoreAwareDetectionLoss
+from .gotp_criterion import GOTPAwareDetectionLoss
 
 
 class CrowdConflictE2ELoss(E2ELoss):
     """Preserve O2M/O2O loss decay and add a separately logged fourth component."""
 
     def __init__(self, model, conflict_weight: float = 0.25,
-                 cra_enabled: bool = False, ignore_aware: bool = False):
-        super().__init__(
-            model, loss_fn=IgnoreAwareDetectionLoss if ignore_aware else __import__(
-                "ultralytics.utils.loss", fromlist=["v8DetectionLoss"]
-            ).v8DetectionLoss
+                 cra_enabled: bool = False, ignore_aware: bool = False,
+                 gotp_weight: float = 0.0):
+        # Both O2M/O2O must return the same number of loss components so the
+        # *official* E2ELoss dynamic branch weighting can remain untouched.
+        loss_type = (
+            GOTPAwareDetectionLoss if gotp_weight > 0 else
+            IgnoreAwareDetectionLoss if ignore_aware else v8DetectionLoss
         )
+        super().__init__(model, loss_fn=loss_type)
         if cra_enabled:
             self.one2many.assigner = upgrade_assigner(self.one2many.assigner)
             self.one2one.assigner = upgrade_assigner(self.one2one.assigner)

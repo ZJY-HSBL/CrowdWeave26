@@ -26,6 +26,9 @@ ENV_MODE = "CROWDWEAVE26_MODE"
 ENV_CONFLICT_WEIGHT = "CROWDWEAVE26_CONFLICT_WEIGHT"
 ENV_CRA_ENABLED = "CROWDWEAVE26_CRA_ENABLED"
 ENV_IGNORE_AWARE = "CROWDWEAVE26_IGNORE_AWARE"
+ENV_GOTP_WEIGHT = "CROWDWEAVE26_GOTP_WEIGHT"
+ENV_GOTP_MARGIN = "CROWDWEAVE26_GOTP_MARGIN"
+ENV_GOTP_MAX_GT = "CROWDWEAVE26_GOTP_MAX_GT"
 
 
 class CrowdDetect(Detect):
@@ -94,10 +97,12 @@ class CrowdSupervisedDetectionModel(DetectionModel):
         has_cfsr = isinstance(self.model[-1], CrowdDetect)
         cra = bool(getattr(self, "crowd_cra_enabled", False))
         ignore = bool(getattr(self, "crowd_ignore_aware", False))
-        if has_cfsr or cra or ignore:
+        gotp_weight = float(getattr(self, "crowd_gotp_weight", 0.0))
+        if has_cfsr or cra or ignore or gotp_weight > 0:
             weight = float(getattr(self, "crowd_conflict_weight", 0.25)) if has_cfsr else 0.0
             return CrowdConflictE2ELoss(
-                self, conflict_weight=weight, cra_enabled=cra, ignore_aware=ignore
+                self, conflict_weight=weight, cra_enabled=cra,
+                ignore_aware=ignore, gotp_weight=gotp_weight
             )
         return super().init_criterion()
 
@@ -142,6 +147,15 @@ class CrowdWeaveTrainer(DetectionTrainer):
         model.crowd_conflict_weight = weight
         model.crowd_cra_enabled = os.environ.get(ENV_CRA_ENABLED, "0") == "1"
         model.crowd_ignore_aware = os.environ.get(ENV_IGNORE_AWARE, "0") == "1"
+        model.crowd_gotp_weight = float(os.environ.get(ENV_GOTP_WEIGHT, "0.0"))
+        model.crowd_gotp_margin = float(os.environ.get(ENV_GOTP_MARGIN, "0.03"))
+        model.crowd_gotp_max_gt = int(os.environ.get(ENV_GOTP_MAX_GT, "128"))
+        if not 0 <= model.crowd_gotp_weight <= 10:
+            raise ValueError("GOTP weight must lie in [0, 10]")
+        if not 0 <= model.crowd_gotp_margin <= 1:
+            raise ValueError("GOTP margin must lie in [0, 1]")
+        if model.crowd_gotp_max_gt < 2:
+            raise ValueError("GOTP max_gt must be >= 2")
         if weights is not None:
             model.load(weights)
             if mode in ("scad", "both"):

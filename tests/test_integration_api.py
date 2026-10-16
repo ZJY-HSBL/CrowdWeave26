@@ -184,3 +184,64 @@ def test_cra_counts_and_validation_exclusion():
     with torch.no_grad():
         model.loss(batch, model(batch["img"]))
     assert assigner.cumulative_cra_stats == before
+
+
+
+def test_unique_gt_gotp_loss_real_official_yolo26_backward():
+    import torch
+    from ultralytics.cfg import get_cfg
+    from crowdweave26.integration import CrowdSupervisedDetectionModel
+    from crowdweave26.gotp_criterion import GOTPAwareDetectionLoss
+    model = CrowdSupervisedDetectionModel("yolo26n-p2.yaml", nc=1, verbose=False)
+    model.args = get_cfg()
+    model.crowd_gotp_weight = 0.2
+    model.crowd_gotp_margin = 0.03
+    model.train()
+    batch = {
+        "img": torch.rand(1, 3, 96, 96),
+        "batch_idx": torch.tensor([0.0,0.0]),
+        "cls": torch.zeros(2, 1),
+        "bboxes": torch.tensor([[.46,.5,.45,.6],[.57,.5,.45,.6]]),
+    }
+    loss, items = model(batch)
+    assert loss.shape == (4,)
+    assert list(items) == ["box_loss", "cls_loss", "dfl_loss", "gotp_loss"]
+    assert torch.isfinite(loss).all()
+    assert isinstance(model.criterion.one2one, GOTPAwareDetectionLoss)
+    loss.sum().backward()
+    assert model.model[-1].cv2[0][0].conv.weight.grad is not None
+    model.criterion.update()
+
+
+def test_gotp_combined_with_cra_cfsr_ignore_and_validation():
+    import torch
+    from ultralytics.cfg import get_cfg
+    from crowdweave26.integration import CrowdSupervisedDetectionModel, install_crowdweave
+    model = CrowdSupervisedDetectionModel("yolo26n-p2.yaml", nc=1, verbose=False)
+    install_crowdweave(model, "both")
+    model.args = get_cfg()
+    model.crowd_gotp_weight = 0.15
+    model.crowd_gotp_margin = 0.03
+    model.crowd_ignore_aware = True
+    model.crowd_cra_enabled = True
+    batch = {
+        "img":torch.rand(1,3,96,96),
+        "batch_idx":torch.tensor([0.0,0.0]),
+        "cls":torch.zeros(2,1),
+        "bboxes":torch.tensor([[.45,.51,.43,.62],[.56,.52,.46,.61]]),
+        "ignore_bboxes":torch.tensor([[.86,.32,.20,.26]]),
+        "ignore_batch_idx":torch.tensor([0.0]),
+    }
+    model.train()
+    train_loss, items = model(batch)
+    assert train_loss.shape == (5,)
+    assert list(items) == ["box_loss", "cls_loss", "dfl_loss",
+                           "gotp_loss", "conflict_loss"]
+    assert torch.isfinite(train_loss).all()
+    train_loss.sum().backward()
+    assert model.model[-1].crowd_cfsr.conflict.weight.grad is not None
+    model.eval()
+    with torch.no_grad():
+        val_loss, val_items = model.loss(batch, model(batch["img"]))
+    assert val_loss.shape == train_loss.shape and torch.isfinite(val_loss).all()
+    assert val_items["conflict_loss"] == 0

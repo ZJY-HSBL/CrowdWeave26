@@ -66,3 +66,10 @@ def test_malformed_assignment_dimensions_rejected():
     pred,gt,fg,idx,q=_example()
     with pytest.raises(ValueError):
         representative_pair_loss(pred,gt,fg,idx[:,:-1],q)
+
+
+
+def test_max_gt_subsampling_is_stable_and_finite():
+    pred,gt,fg,idx,q=_example()
+    loss=representative_pair_loss(pred,gt,fg,idx,q,max_gt=2)
+    assert torch.isfinite(loss)

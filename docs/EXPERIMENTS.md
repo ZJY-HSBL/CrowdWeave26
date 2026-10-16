@@ -70,3 +70,17 @@ Compare both with and without this option in matched-budget baselines, and
 report the ignore-aware setting for every ablation. Native box transforms
 provide conservative axis-aligned approximations, not precise ignore polygons.
 The official reference validation evaluator from v0.5.0 remains separate.
+
+
+## v0.7.0 GOTP hypothesis
+
+GOTP may reduce spurious overlap between predicted boxes belonging to
+different nearby pedestrians. To avoid self-penalties, it first chooses
+one TAL-positive anchor for each distinct GT per image. It penalizes only
+`ReLU(IoU(pred_i,pred_j) - IoU(gt_i,gt_j) - margin)`.
+This is an **auxiliary** loss (not a replacement for the native box/cls/DFL).
+Use `--gotp-weight 0` as the matched control; compare with
+`--gotp-weight 0.15` at identical seeds, images and training budgets.
+Report the effective number of pairs and overhead in future experiments.
+The matching representative uses detached predicted IoU as a quality proxy,
+not the upstream TAL target-score tensor. Accuracy has not been measured.

@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased — v0.7.0 GOTP candidate
+
+- Implement genuine YOLO26 O2M/O2O pairwise GT-overlap-tolerant supervision.
+- Select at most one representative positive per unique assigned ground-truth
+  pedestrian to prevent false self-collision penalties.
+- Expose independent weight, tolerance margin, and maximum-person controls.
+- Preserve native box/class/DFL losses, branch gain schedule, and ignore/CRA/CFSR.
+- Add synthetic gradient/identity tests and real-network training and validation gates.
+- Research status: algorithm integrated, no measured CrowdHuman AP/mMR/JI gain.
+
+
+
 ## v0.6.0 — 2026-10-15 ignore-aware negative suppression
 
 - Carry excluded annotations through original YOLO26 Mosaic, affine and flip geometries.

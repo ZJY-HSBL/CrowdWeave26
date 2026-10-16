@@ -187,3 +187,26 @@ pixel-accurate segmentation masks. Copy-paste and CutMix are not validated;
 the research CLI defaults must retain those augmentations disabled for
 ignore-aware training. Multi-GPU/DDP and production-speed benchmarks remain
 unverified.
+
+
+## v0.7.0 development: GOTP unique-person pairwise supervision
+
+GOTP is now an optional `--gotp-weight` in the genuine YOLO26 training
+criterion. Foreground positive anchors are grouped by the GT assigned by TAL,
+with **one representative per GT** selected by detached predicted/assigned
+box IoU. The auxiliary term penalizes excessive *predicted* overlap only for
+nearby distinct GT people, relative to their **true** full-body overlap.
+No person is compared against itself, and the original class/box/DFL losses
+and official One-to-Many/One-to-One decay remain intact.
+
+```powershell
+# Matched ablation: change only --gotp-weight
+python -m crowdweave.cli train --data D:/CrowdHuman/yolo/crowdhuman.yaml --variant n-p2 --ignore-aware --assignment cra --gotp-weight 0.0 --seed 0
+python -m crowdweave.cli train --data D:/CrowdHuman/yolo/crowdhuman.yaml --variant n-p2 --ignore-aware --assignment cra --gotp-weight 0.15 --gotp-margin 0.03 --seed 0
+```
+
+**Limitations:** the representative per GT is selected from detached IoU,
+not from the actual TAL target quality; pair capping drops some large-crowd
+comparisons, and CPU synchronization/throughput is not yet benchmarked.
+No actual CrowdHuman training has been run. GOTP is a candidate, not a
+verified improvement or novel method.

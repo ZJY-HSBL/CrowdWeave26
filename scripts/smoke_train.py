@@ -11,16 +11,20 @@ from tempfile import TemporaryDirectory
 from PIL import Image, ImageDraw
 
 
-def run(mechanism="none", assignment="cra", ignore_aware=False, mosaic=False):
+def run(mechanism="none", assignment="cra", ignore_aware=False, mosaic=False,
+        gotp_weight=0.0):
     from ultralytics import YOLO
     from crowdweave26.integration import (
         CrowdWeaveTrainer, ENV_MODE, ENV_CRA_ENABLED, ENV_CONFLICT_WEIGHT,
-        ENV_IGNORE_AWARE
+        ENV_IGNORE_AWARE, ENV_GOTP_WEIGHT, ENV_GOTP_MARGIN, ENV_GOTP_MAX_GT
     )
     os.environ[ENV_MODE] = mechanism
     os.environ[ENV_CRA_ENABLED] = "1" if assignment == "cra" else "0"
     os.environ[ENV_CONFLICT_WEIGHT] = "0.25"
     os.environ[ENV_IGNORE_AWARE] = "1" if ignore_aware else "0"
+    os.environ[ENV_GOTP_WEIGHT] = str(gotp_weight)
+    os.environ[ENV_GOTP_MARGIN] = "0.03"
+    os.environ[ENV_GOTP_MAX_GT] = "128"
     with TemporaryDirectory(prefix="crowdweave_train_") as work:
         root = Path(work)
         for split in ("train", "val"):
@@ -72,7 +76,8 @@ def run(mechanism="none", assignment="cra", ignore_aware=False, mosaic=False):
             assert {r["branch"] for r in rows} == {"one2many", "one2one"}
             assert all(int(row["calls"]) >= 1 for row in rows)
         print("Synthetic one-epoch CPU train complete:",
-              mechanism, assignment, "ignore-aware", ignore_aware, "mosaic", mosaic)
+              mechanism, assignment, "ignore-aware", ignore_aware, "mosaic", mosaic,
+              "gotp_weight", gotp_weight)
 
 
 if __name__ == "__main__":
@@ -81,5 +86,7 @@ if __name__ == "__main__":
     parser.add_argument("--assignment", choices=("standard","cra"), default="cra")
     parser.add_argument("--ignore-aware", action="store_true")
     parser.add_argument("--mosaic", action="store_true")
+    parser.add_argument("--gotp-weight", type=float, default=0.0)
     args = parser.parse_args()
-    run(args.mechanism, args.assignment, args.ignore_aware, args.mosaic)
+    run(args.mechanism, args.assignment, args.ignore_aware, args.mosaic,
+        args.gotp_weight)

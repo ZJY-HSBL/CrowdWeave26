@@ -25,6 +25,12 @@ def build_parser() -> argparse.ArgumentParser:
                    help="Optional collision-reserved TAL matching, independent of SCAD/CFSR")
     p.add_argument("--ignore-aware", action="store_true",
                    help="Transform CrowdHuman ignore boxes and mask unmatched negative BCE anchors")
+    p.add_argument("--gotp-weight", type=float, default=0.0,
+                   help="Opt-in GT-overlap-tolerant unique-person pairwise penalty")
+    p.add_argument("--gotp-margin", type=float, default=0.03,
+                   help="Allowed excess predicted overlap above GT IoU")
+    p.add_argument("--gotp-max-gt", type=int, default=128,
+                   help="Maximum distinct assigned pedestrians per image in GOTP")
     p.add_argument("--conflict-weight", type=float, default=0.25,
                    help="CFSR auxiliary GT-overlap BCE gain, for cfsr/both training")
     p.add_argument("--project", default="runs/crowdweave26")
@@ -44,6 +50,12 @@ def run(args: argparse.Namespace) -> None:
         raise ValueError("imgsz, batch and epochs must be positive")
     if not 0 <= args.conflict_weight <= 10:
         raise ValueError("--conflict-weight must be in [0,10]")
+    if not 0 <= args.gotp_weight <= 10 or not 0 <= args.gotp_margin <= 1:
+        raise ValueError("GOTP weight must be in [0,10] and margin in [0,1]")
+    if args.gotp_max_gt < 2:
+        raise ValueError("--gotp-max-gt must be >= 2")
+    if args.mode != "train" and args.gotp_weight:
+        raise ValueError("GOTP applies during training only")
     if args.mechanism != "none":
         if args.mode != "train":
             raise ValueError("Validate custom checkpoints without --mechanism")
@@ -55,16 +67,19 @@ def run(args: argparse.Namespace) -> None:
     if args.mode == "train":
         kwargs = dict(**common, epochs=args.epochs, seed=args.seed, deterministic=True,
                       close_mosaic=min(20, args.epochs),
-                      name=f"yolo26_{args.variant}_{args.mechanism}_{args.assignment}_{'ignore' if args.ignore_aware else 'default'}_seed{args.seed}")
-        if args.mechanism != "none" or args.assignment == "cra" or args.ignore_aware:
+                      name=f"yolo26_{args.variant}_{args.mechanism}_{args.assignment}_{'ignore' if args.ignore_aware else 'default'}_gotp{args.gotp_weight:g}_seed{args.seed}")
+        if args.mechanism != "none" or args.assignment == "cra" or args.ignore_aware or args.gotp_weight > 0:
             from crowdweave26.integration import (
                 CrowdWeaveTrainer, ENV_MODE, ENV_CONFLICT_WEIGHT, ENV_CRA_ENABLED,
-                ENV_IGNORE_AWARE
+                ENV_IGNORE_AWARE, ENV_GOTP_WEIGHT, ENV_GOTP_MARGIN, ENV_GOTP_MAX_GT
             )
             os.environ[ENV_MODE] = args.mechanism
             os.environ[ENV_CONFLICT_WEIGHT] = str(args.conflict_weight)
             os.environ[ENV_CRA_ENABLED] = "1" if args.assignment == "cra" else "0"
             os.environ[ENV_IGNORE_AWARE] = "1" if args.ignore_aware else "0"
+            os.environ[ENV_GOTP_WEIGHT] = str(args.gotp_weight)
+            os.environ[ENV_GOTP_MARGIN] = str(args.gotp_margin)
+            os.environ[ENV_GOTP_MAX_GT] = str(args.gotp_max_gt)
             kwargs["trainer"] = CrowdWeaveTrainer
         model.train(**kwargs)
     else:

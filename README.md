@@ -22,7 +22,7 @@ novelty, higher AP, lower miss rate or a new state of the art.
 | **SCAD** | Spatial-Conflict Anti-Aliasing Downsampling | Integrated into YOLO26-P2, opt-in |
 | **CFSR** | Conflict-Field Scale Routing | Integrated into YOLO26-P2, supervised by augmented GT box overlap |
 | **CRA** | Collision-Reserved Assignment | Integrated into official TAL as an opt-in training-only experiment on `main` |
-| **GOTP** | GT-Overlap-Tolerant Pairwise Loss | Standalone prototype; not in official training criterion |
+| **GOTP** | GT-Overlap-Tolerant Pairwise Loss | Opt-in unique-GT O2M/O2O training integration; synthetic tests passed |
 | **VGCR** | Visibility-Geometry Consistent Reconstruction | Design proposal, not integrated |
 | **ACDT** | Ambiguity-Calibrated Dual-Head Transfer | Design proposal, not integrated |
 
@@ -109,13 +109,13 @@ throughput, GPU memory, DDP and torch.compile compatibility remain unverified.
 - `.github/workflows/release.yml`: runs test gates before creating a
   tagged source ZIP on version changes. No datasets or weights in releases.
 
-Current stable tag: **v0.6.0**. CRA-only and combined SCAD+CFSR+CRA
+Current stable tag: **v0.7.0**. CRA-only and combined SCAD+CFSR+CRA
 synthetic one-epoch CPU train-loop gates pass; CrowdHuman accuracy remains untested.
 
 ## Research limitations / 研究边界
 
 1. No CrowdHuman full training or official AP/mMR/JI result is published.
-2. Ignore regions are preserved as metadata but not yet loss-masked.
+2. Rectangular ignore-aware negative suppression is opt-in; CutMix, CopyPaste, and DDP are not validated.
 3. CFSR overlap labels are rectangle-overlap proxies, **not** true visible
    occlusion maps.
 4. CRA coverage gains in synthetic collisions do not establish detection gains.
@@ -145,9 +145,7 @@ The reference toolkit remains a **separate checkout**.
 See [docs/EXPERIMENTS.md](docs/EXPERIMENTS.md) for the exact two commands,
 evaluator SHA, reproducibility settings and dataset requirements.
 
-**Boundary:** this closes the prediction-to-evaluation format gap but does
-not implement ignored-region loss masking during training; no actual trained
-CrowdHuman accuracy numbers have been produced.
+**Boundary:** v0.6.0 added optional rectangular train-time ignore masking. No actual CrowdHuman accuracy results have been produced.
 
 
 ### Commands: original CrowdHuman AP/mMR/JI protocol
@@ -189,7 +187,7 @@ ignore-aware training. Multi-GPU/DDP and production-speed benchmarks remain
 unverified.
 
 
-## v0.7.0 development: GOTP unique-person pairwise supervision
+## v0.7.0 — GOTP unique-person pairwise supervision
 
 GOTP is now an optional `--gotp-weight` in the genuine YOLO26 training
 criterion. Foreground positive anchors are grouped by the GT assigned by TAL,

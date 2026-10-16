@@ -52,9 +52,8 @@ python -m crowdweave.official_metrics --odgt D:/CrowdHuman/annotation_val.odgt -
 Use the same confidence floor, input resolution, max detections, NMS settings,
 checkpoint selection and official annotation split for all comparisons.
 A synthetic reference-evaluator CI test checks ignored-region matching but
-**is not** a CrowdHuman measured result. Training-time ignore-aware background
-losses remain unimplemented, so do not assert parity with results whose
-training policy correctly masks ignored negatives.
+**is not** a CrowdHuman measured result. Train-time rectangular ignore-aware suppression is opt-in since v0.6.0,
+but pixel-exact ignored regions and CutMix/CopyPaste remain unverified.
 
 
 ## Ignore-aware train-time matching (v0.6.0 candidate)

@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased — v0.7.0 GOTP candidate
+## v0.7.0 — 2026-10-16 unique-GT GOTP integration
 
 - Implement genuine YOLO26 O2M/O2O pairwise GT-overlap-tolerant supervision.
 - Select at most one representative positive per unique assigned ground-truth

@@ -23,3 +23,11 @@ tests cannot substitute for real CrowdHuman metrics or establish novelty.
 - **Next:** GPU overhead, DDP support and real CrowdHuman training/validation
   on an identical dataset/split, optimizer budget and fixed seed. Contrast
   no-ignore and ignore-aware baselines before attributing changes to CRA/CFSR.
+
+
+- **v0.7.0:** GOTP now computes pairwise excess predicted overlap for
+  representative positives matched to different GTs in the genuine
+  YOLO26 O2M/O2O criterion. Tested separately and with CRA/CFSR/ignore.
+- **Next priority:** actual CrowdHuman training, official reference
+  validation and paired multi-seed comparisons. Before publishing claims,
+  measure active-pair incidence, gradient frequency and GPU overhead.

@@ -83,3 +83,19 @@ Use `--gotp-weight 0` as the matched control; compare with
 Report the effective number of pairs and overhead in future experiments.
 The matching representative uses detached predicted IoU as a quality proxy,
 not the upstream TAL target-score tensor. Accuracy has not been measured.
+
+
+## GOTP telemetry interpretation (v0.7.1 candidate)
+
+`gotp_pairs.csv` uses **per-epoch** and **per-branch** counters. A GOTP
+loss of zero is ambiguous: if `nearby_pairs=0`, the auxiliary objective
+did not evaluate any eligible nearby people; if `nearby_pairs>0` but
+`violating_pairs=0`, the tested pairs satisfy the tolerance. Nonzero
+`violating_pairs` indicates a positive hinge penalty, but is not in itself
+proof of nonzero parameter gradient or increased detection performance.
+
+For each mechanism configuration, collect these counters at all seeds,
+then measure real-GPU training elapsed time, peak memory and official
+validation AP/mMR/JI under the identical benchmark protocol. The standalone
+synthetic microbenchmark (`scripts/benchmark_gotp.py`) is only a debugging
+cost floor, not a full-model speed estimate.

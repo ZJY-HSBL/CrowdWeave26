@@ -208,3 +208,25 @@ not from the actual TAL target quality; pair capping drops some large-crowd
 comparisons, and CPU synchronization/throughput is not yet benchmarked.
 No actual CrowdHuman training has been run. GOTP is a candidate, not a
 verified improvement or novel method.
+
+
+### GOTP pair activity and microbenchmark (v0.7.1 candidate)
+
+The opt-in GOTP criterion now accumulates `gotp_pairs.csv` at training
+epoch boundaries, with separate rows for One-to-Many and One-to-One:
+representative people, candidate *nearby* pairs, **pairs violating**
+the GT-relative IoU tolerance, images with pairs and raw unweighted GOTP.
+`violating_pair_fraction` is left blank when there are zero candidate
+pairs, never falsely reported as a genuine 0% violation rate. Eval-mode
+loss computation is excluded from training counters.
+
+```powershell
+python scripts/benchmark_gotp.py --device cpu --people 8 16 32 64 --repeats 30
+# With working CUDA + PyTorch GPU install:
+python scripts/benchmark_gotp.py --device cuda --people 8 16 32 64 --repeats 30 --output runs/gotp_microbenchmark.json
+```
+
+The benchmark measures only the synthetic representative-assignment GOTP
+forward/backward kernel and its active-pair/gradient incidence. It does **not**
+measure full YOLO26 training overhead, CrowdHuman AP/mMR/JI or true GPU
+scaling. These must be reported separately from real dataset experiments.

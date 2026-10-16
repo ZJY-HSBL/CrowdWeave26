@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased — v0.7.1 GOTP instrumentation candidate
+
+- Count per-image representative unique pedestrians, eligible nearby pairs,
+  positive hinge-penalty pairs and unweighted loss without per-step host
+  scalar transfers.
+- Export per-epoch O2M/O2O GOTP diagnostics to `gotp_pairs.csv`, excluding
+  evaluation and preserving undefined ratios when no eligible pair exists.
+- Extend actual synthetic one-epoch training gate to require CSV output.
+- Add deterministic CPU/GPU-capable standalone GOTP forward/backward
+  timing with synchronized GPU measurements; no real CrowdHuman results.
+
+
+
 ## v0.7.0 — 2026-10-16 unique-GT GOTP integration
 
 - Implement genuine YOLO26 O2M/O2O pairwise GT-overlap-tolerant supervision.

@@ -267,3 +267,27 @@ def test_gotp_counters_exclude_eval_mode():
     with torch.no_grad():
         model.loss(batch,model(batch["img"]))
     assert torch.equal(first,model.criterion.one2many.gotp_running)
+
+
+
+def test_both_gotp_branches_report_matching_cumulative_batch_calls():
+    import torch
+    from ultralytics.cfg import get_cfg
+    from crowdweave26.integration import CrowdSupervisedDetectionModel
+    model = CrowdSupervisedDetectionModel("yolo26n-p2.yaml",nc=1,verbose=False)
+    model.args = get_cfg()
+    model.crowd_gotp_weight = 0.2
+    model.train()
+    batch = {
+        "img":torch.rand(2,3,96,96),
+        "batch_idx":torch.tensor([0.,0.,1.,1.]),
+        "cls":torch.zeros(4,1),
+        "bboxes":torch.tensor([[.42,.5,.4,.5],[.53,.5,.4,.5],
+                               [.42,.5,.4,.5],[.53,.5,.4,.5]])}
+    model(batch)
+    a=model.criterion.one2many.gotp_running
+    b=model.criterion.one2one.gotp_running
+    assert int(a[0])==1 and int(b[0])==1
+    assert torch.isfinite(a).all() and torch.isfinite(b).all()
+    assert a[2]>=a[3] and b[2]>=b[3]
+    assert a[1]>=0 and b[1]>=0

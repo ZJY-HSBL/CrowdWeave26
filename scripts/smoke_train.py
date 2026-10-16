@@ -75,6 +75,9 @@ def run(mechanism="none", assignment="cra", ignore_aware=False, mosaic=False,
             assert len(measurements) == 2
             assert {row["branch"] for row in measurements} == {"one2many", "one2one"}
             assert all(int(row["calls"]) > 0 for row in measurements)
+            assert all(int(row["nearby_pairs"]) >= int(row["violating_pairs"]) >= 0
+                       for row in measurements)
+            print("GOTP synthetic-epoch diagnostics:", json.dumps(measurements))
         if assignment == "cra":
             import csv
             report = root/"runs"/"smoke"/"cra_coverage.csv"

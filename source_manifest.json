@@ -1,7 +1,7 @@
 {
   "repository": "https://github.com/ultralytics/ultralytics",
   "upstream_commit": "a0fd1d727fe5ef5c0f6837646f794eba5b0575f5",
-  "checked_utc": "2026-10-16",
+  "checked_utc": "2026-10-17",
   "source_reviewed": [
     "ultralytics/cfg/models/26/yolo26.yaml",
     "ultralytics/cfg/models/26/yolo26-p2.yaml",
@@ -16,18 +16,18 @@
     "SCAD": "Integrated into YOLO26-P2",
     "CFSR": "Integrated with augmented GT-overlap auxiliary supervision",
     "CRA": "Opt-in official TAL collision repair; CRA-only and SCAD+CFSR+CRA synthetic training and validation gates pass",
-    "GOTP": "Unique-person GOTP O2M/O2O auxiliary loss opt-in; official YOLO26 backward and synthetic one-epoch training verified",
+    "GOTP": "Integrated v0.7.1; O2M/O2O per-epoch eligible/active pair counters, spatially nearest capped pairs; CPU synthetic benchmark and full training tests passed",
     "VGCR": "Proposed",
     "ACDT": "Proposed",
     "IgnoreAwareTraining": "Opt-in synchronized native Mosaic/flip geometry; mask unmatched background BCE and auxiliary CFSR BCE; synthetic CPU training verified"
   },
   "evaluation_limits": [
-    "No real CrowdHuman training or reference AP/mMR/JI measurements",
-    "No paired multi-seed accuracy or uncertainty evidence",
-    "GOTP selects via detached box IoU rather than true TAL target score; cap 128 GT and 4096 pairs",
-    "GPU throughput, DDP, CopyPaste/CutMix and torch.compile unverified",
-    "Ignore masks are geometric rectangles rather than pixel-exact ignore areas",
-    "No prior-art originality or SOTA claims verified"
+    "No full CrowdHuman training, validation AP/mMR/JI, measured improvement or publication-ready ablation",
+    "GOTP synthetic fixture has nonzero pair penalties and gradients but is not real-dataset evidence",
+    "Only synthetic GOTP kernel CPU microbenchmark in CI; no end-to-end GPU timing or memory data",
+    "DDP, torch.compile, CutMix, CopyPaste unverified",
+    "Ignore rectangles geometrically transformed, not pixel-exact ignore regions",
+    "No verified algorithmic novelty, top-tier publication claim or SOTA improvement"
   ],
   "license_note": "Ultralytics AGPL-3.0/commercial license applies to upstream and derivatives as appropriate",
   "reference_evaluator": {

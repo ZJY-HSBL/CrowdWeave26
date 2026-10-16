@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased — v0.7.1 GOTP instrumentation candidate
+## v0.7.1 — 2026-10-17 GOTP instrumentation and pair selection
 
 - Count per-image representative unique pedestrians, eligible nearby pairs,
   positive hinge-penalty pairs and unweighted loss without per-step host

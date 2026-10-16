@@ -31,3 +31,11 @@ tests cannot substitute for real CrowdHuman metrics or establish novelty.
 - **Next priority:** actual CrowdHuman training, official reference
   validation and paired multi-seed comparisons. Before publishing claims,
   measure active-pair incidence, gradient frequency and GPU overhead.
+
+
+- **v0.7.1:** measured per-epoch GOTP eligible pairs and active hinge-pairs
+  on both O2M/O2O branches, changed capped pairs to nearest GT neighbors,
+  and added a synchronized CPU/CUDA forward+backward microbenchmark.
+  CPU GitHub Actions synthetic checks confirm active penalties and gradients.
+- **Next:** real CrowdHuman data and weights, independent training seeds,
+  official AP/mMR/JI with fixed inference, and actual CUDA model overhead.

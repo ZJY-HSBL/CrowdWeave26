@@ -109,7 +109,7 @@ throughput, GPU memory, DDP and torch.compile compatibility remain unverified.
 - `.github/workflows/release.yml`: runs test gates before creating a
   tagged source ZIP on version changes. No datasets or weights in releases.
 
-Current stable tag: **v0.7.0**. CRA-only and combined SCAD+CFSR+CRA
+Current stable tag: **v0.7.1**. CRA-only and combined SCAD+CFSR+CRA
 synthetic one-epoch CPU train-loop gates pass; CrowdHuman accuracy remains untested.
 
 ## Research limitations / 研究边界
@@ -210,7 +210,7 @@ No actual CrowdHuman training has been run. GOTP is a candidate, not a
 verified improvement or novel method.
 
 
-### GOTP pair activity and microbenchmark (v0.7.1 candidate)
+### GOTP pair activity and microbenchmark (v0.7.1)
 
 The opt-in GOTP criterion now accumulates `gotp_pairs.csv` at training
 epoch boundaries, with separate rows for One-to-Many and One-to-One:

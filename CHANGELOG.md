@@ -8,6 +8,8 @@
 - Export per-epoch O2M/O2O GOTP diagnostics to `gotp_pairs.csv`, excluding
   evaluation and preserving undefined ratios when no eligible pair exists.
 - Extend actual synthetic one-epoch training gate to require CSV output.
+- Fix capped GOTP pair selection: prioritize spatially nearest GT pairs,
+  instead of annotation-order truncation.
 - Add deterministic CPU/GPU-capable standalone GOTP forward/backward
   timing with synchronized GPU measurements; no real CrowdHuman results.
 

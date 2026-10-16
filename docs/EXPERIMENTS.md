@@ -99,3 +99,9 @@ then measure real-GPU training elapsed time, peak memory and official
 validation AP/mMR/JI under the identical benchmark protocol. The standalone
 synthetic microbenchmark (`scripts/benchmark_gotp.py`) is only a debugging
 cost floor, not a full-model speed estimate.
+
+
+Pair caps use nearest-pair GT centroid distance normalized by full-body
+extent, rather than truncation in annotation ID order. This selection
+introduces an explicit proximity focus when crowds contain more than
+`max_pairs` potentially comparable pairs; document this setting.

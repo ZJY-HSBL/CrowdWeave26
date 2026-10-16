@@ -112,3 +112,22 @@ def test_empty_minibatch_statistics_preserve_zero_gradient():
     assert loss.item() == 0.
     loss.backward()
     assert pred.grad is not None
+
+
+
+def test_pair_cap_selects_nearest_distinct_people_not_first_annotation():
+    from crowdweave26.losses import gotp_pairwise_loss
+    gt=torch.tensor([[0.,0.,10.,10.],[100.,0.,110.,10.],
+                     [200.,0.,210.,10.],[211.,0.,221.,10.]])
+    pred=gt.clone()
+    pred[2]=torch.tensor([198.,0.,216.,10.])
+    pred[3]=torch.tensor([207.,0.,225.,10.])
+    pred.requires_grad_()
+    loss,stats=gotp_pairwise_loss(
+        pred,gt,max_pairs=1,only_close_gt=False,return_stats=True
+    )
+    assert loss>0
+    assert stats.tolist()==[1.,1.]
+    loss.backward()
+    assert pred.grad[2:].abs().sum()>0
+    assert pred.grad[:2].abs().sum()==0

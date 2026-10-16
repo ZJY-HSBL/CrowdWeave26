@@ -52,7 +52,15 @@ def gotp_pairwise_loss(pred_xyxy: torch.Tensor, gt_xyxy: torch.Tensor, *,
     if a.numel() == 0:
         zero = pred_xyxy.sum() * 0.
         return (zero, zero.new_zeros(2)) if return_stats else zero
-    a,b=a[:max_pairs],b[:max_pairs]
+    # A lexicographic truncation biases towards early annotation IDs.
+    # Select the geometrically nearest GT pairs when the pair budget binds.
+    if a.numel() > max_pairs:
+        centers = (gt[:, :2] + gt[:, 2:]) * .5
+        sides = (gt[:, 2:] - gt[:, :2]).clamp_min(0)
+        scale = torch.maximum(sides[a].amax(1), sides[b].amax(1)).clamp_min(1e-8)
+        proximity = (centers[a] - centers[b]).norm(dim=1) / scale
+        selected = torch.argsort(proximity, stable=True)[:max_pairs]
+        a, b = a[selected], b[selected]
     excess = _pair_iou(pred_xyxy[a],pred_xyxy[b]) - _pair_iou(gt[a],gt[b]) - margin
     loss = F.relu(excess).mean()
     if not return_stats:

@@ -10,6 +10,7 @@ import hashlib
 import json
 import math
 from pathlib import Path
+from PIL import Image
 
 DEFAULT_STUDY = ("B1", "B1_IGN", "R1_IGN", "SC1_IGN",
                  "SCR1_IGN", "GOTP1", "GOTP_CRA", "GOTP_FULL")
@@ -60,7 +61,7 @@ def _labels(path: Path) -> int:
     return count
 
 
-def preflight(root: Path) -> dict:
+def preflight(root: Path, *, verify_images: bool = False) -> dict:
     """Validate converted train/val images, labels and intact metadata keys.
 
     SHA-256 fingerprints annotation/metadata files, NOT JPEG image contents.
@@ -93,6 +94,13 @@ def preflight(root: Path) -> dict:
         if set(images) != set(ignored) or set(images) != set(associated):
             raise ValueError(f"Image IDs differ from metadata in {split}")
         total_boxes, total_ignore = 0, 0
+        if verify_images:
+            for image in images.values():
+                try:
+                    with Image.open(image) as img:
+                        img.verify()
+                except (OSError,ValueError) as exc:
+                    raise ValueError(f"Invalid JPEG image: {image}") from exc
         for image_id in sorted(images):
             n = _labels(labels[image_id])
             rows = associated[image_id]
@@ -121,6 +129,7 @@ def preflight(root: Path) -> dict:
         "fingerprint_scope":"converter YAML, all label TXT and associated/ignored JSON; JPEG bytes NOT hashed",
         "splits":summaries,
         "checked":True,
+        "jpeg_headers_verified":bool(verify_images),
         "official_scores":"not_computed",
     }
 
@@ -203,6 +212,8 @@ def main():
     ap.add_argument("action",choices=("preflight","plan"))
     ap.add_argument("--data-root",type=Path,required=True)
     ap.add_argument("--matrix",type=Path,default=Path(__file__).resolve().parents[1]/"experiment_matrix.csv")
+    ap.add_argument("--verify-images",action="store_true",
+                    help="Validate JPEG headers in addition to annotation structures")
     ap.add_argument("--experiments",nargs="+",default=list(DEFAULT_STUDY))
     ap.add_argument("--seeds",type=int,nargs="+",default=[0,1,2])
     ap.add_argument("--imgsz",type=int,default=640)
@@ -212,7 +223,7 @@ def main():
     ap.add_argument("--project",type=Path,default=Path("runs/crowdweave_study"))
     ap.add_argument("--output",type=Path)
     args=ap.parse_args()
-    verified=preflight(args.data_root)
+    verified=preflight(args.data_root,verify_images=args.verify_images)
     if args.action=="preflight":
         result=verified
     else:

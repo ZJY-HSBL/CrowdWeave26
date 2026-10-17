@@ -230,3 +230,37 @@ The benchmark measures only the synthetic representative-assignment GOTP
 forward/backward kernel and its active-pair/gradient incidence. It does **not**
 measure full YOLO26 training overhead, CrowdHuman AP/mMR/JI or true GPU
 scaling. These must be reported separately from real dataset experiments.
+
+
+## v0.8.0 research gate — real-data preflight and paired studies
+
+Before expensive CrowdHuman training, validate the **actual converted** train
+and val directories, full-body YOLO labels, associated/ignored annotation IDs
+and absence of train/val ID leakage. The preflight reports a SHA-256 **annotation
+fingerprint** covering metadata, labels and dataset YAML (not JPEG image
+contents). `--verify-images` additionally checks every JPG header.
+
+```powershell
+python -m crowdweave.experiments preflight --data-root D:/CrowdHuman/yolo --verify-images --output runs/study/dataset_preflight.json
+python -m crowdweave.experiments plan --data-root D:/CrowdHuman/yolo --verify-images --seeds 0 1 2 --imgsz 640 --batch 4 --epochs 200 --device 0 --output runs/study/experiment_plan.json
+```
+
+The plan generates **24 controlled training commands** for the default
+eight experimental configurations at seeds 0/1/2, including paired
+ignore-aware baselines for the GOTP comparisons. The generator **never
+executes** these commands. Its `planned_not_executed` status is intentionally
+different from an evaluated result.
+
+Once official CrowdHuman reference metrics actually exist, supply a JSONL
+of observed AP, mMR, JI with seed, annotation hash, evaluator commit,
+inference settings and training protocol. Run:
+```powershell
+python -m crowdweave.comparison --results runs/study/observed_metrics.jsonl --baseline B1_IGN --treatment GOTP1 --output runs/study/gotp_vs_baseline.json
+```
+
+The paired comparator refuses to proceed unless at least three identical
+seeds and all fixed protocol fields match; it uses a seeded 95% paired
+bootstrap interval. Positive improvement is defined as **higher AP/JI and
+lower mMR**. A bootstrap interval is descriptive, not definitive evidence
+of significance. **No real CrowdHuman experiments or scores are included.**
+See [docs/EXPERIMENTS.md](docs/EXPERIMENTS.md) for the required JSONL schema.

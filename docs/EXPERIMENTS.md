@@ -105,3 +105,44 @@ Pair caps use nearest-pair GT centroid distance normalized by full-body
 extent, rather than truncation in annotation ID order. This selection
 introduces an explicit proximity focus when crowds contain more than
 `max_pairs` potentially comparable pairs; document this setting.
+
+
+## v0.8.0 — required reproducibility gates
+
+`crowdweave.experiments preflight` checks both converted splits, labels,
+metadata row counts, full-body rectangles, train/validation leakage and
+the exact converter-created YAML dataset root. Run with `--verify-images`
+to validate JPEG headers as well. The SHA-256 covers annotation and
+metadata files but **not JPEG pixels**, so preflight is not a
+cryptographic raw-image identity guarantee.
+
+`crowdweave.experiments plan` generates a JSON plan with 3 paired seeds
+and all exact CLI arguments but does **not** run model training. The
+default plan contains B1, B1_IGN, R1_IGN, SC1_IGN, SCR1_IGN, GOTP1,
+GOTP_CRA and GOTP_FULL (24 jobs). Use the same fixed seed, budget, dataset
+fingerprint, image size and validation protocol for each direct comparison.
+
+After **actually executing** training and the pinned reference evaluation
+for every planned run, place one JSON object per line in
+`observed_metrics.jsonl`. Each record needs:
+```text
+experiment: a unique experiment ID from experiment_matrix.csv
+seed: integer (three or more matched across both groups)
+AP, mMR, JI: measured numeric CrowdHuman reference metrics
+annotation_sha256: the exact preflight annotation fingerprint
+upstream_commit, evaluator_commit: pinned source identifiers
+inference: {imgsz, conf, iou, max_det, nms_free}
+training_protocol: {epochs, batch, imgsz, optimizer, augmentations}
+```
+In this text description, braces indicate nested objects; produce
+valid JSONL when supplying observations. Do not substitute training
+logs, YOLO-converted mAP, synthetic fixture metrics, or invented values
+for the reference evaluator output.
+
+`python -m crowdweave.comparison --results ... --baseline B1_IGN
+--treatment GOTP1` computes seed-paired AP/JI increases and mMR
+decreases with a seeded percentile bootstrap confidence interval.
+It **fails closed** when seeds, annotation hashes, upstream/evaluator
+commits, inference settings or fixed training parameters disagree.
+The bootstrap is descriptive; the tool cannot verify independently that
+user-supplied numeric reports came from actual GPU training.

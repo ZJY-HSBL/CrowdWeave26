@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased — v0.8.0 reproducible experimentation candidate
+
+- Validate converted CrowdHuman train/val image-label-metadata alignment,
+  full-body bounding boxes, leakage, stale YAML roots and annotation hashes.
+- Optionally verify JPEG headers before training.
+- Generate 24 reproducible 3-seed ablation commands without launching training.
+- Reject fabricated/mixed benchmark comparisons by requiring 3 paired seeds,
+  identical data fingerprints, official evaluator/upstream version, exact
+  inference and fixed training protocols.
+- Provide descriptive seeded paired bootstrap intervals for AP, mMR and JI.
+- Explicitly distinguish planned jobs from real executed/evaluated runs.
+
+
+
 ## v0.7.1 — 2026-10-17 GOTP instrumentation and pair selection
 
 - Count per-image representative unique pedestrians, eligible nearby pairs,

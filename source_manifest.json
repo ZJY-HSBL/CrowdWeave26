@@ -34,5 +34,12 @@
     "repository": "https://github.com/megvii-model/CrowdDetection",
     "commit": "9786f58869a55af3e0b51fc78f8638a825dae4a2",
     "status": "reference metric functions exercised with synthetic ignored-GT cases; no real dataset scores"
+  },
+  "experiment_infrastructure": {
+    "preflight": "Structural train/val + ignored metadata and optional JPEG headers",
+    "fingerprints": "SHA256 of YAML/TXT/associated/ignored JSON, not image bytes",
+    "plan": "Default eight experiments by 3 seeds; never starts GPU jobs",
+    "paired_comparison": "Requires 3 matched seeds, same dataset/protocol/evaluator; descriptive bootstrap",
+    "measured_real_scores": false
   }
 }

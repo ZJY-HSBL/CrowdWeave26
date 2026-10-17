@@ -39,3 +39,12 @@ tests cannot substitute for real CrowdHuman metrics or establish novelty.
   CPU GitHub Actions synthetic checks confirm active penalties and gradients.
 - **Next:** real CrowdHuman data and weights, independent training seeds,
   official AP/mMR/JI with fixed inference, and actual CUDA model overhead.
+
+
+- **v0.8.0:** validate exact CrowdHuman converted-data manifests, reject
+  train/val image-ID overlap and stale YAML paths, create explicit 3-seed
+  ablation job plans and reject unfair evaluation comparisons. No new
+  detector module introduced; this is experiment infrastructure.
+- **Next:** run CrowdHuman GPU training with locally available authorized
+  data and capture reference metrics; measure full-model latency, memory,
+  multi-seed confidence intervals and GOTP active-pair incidence.

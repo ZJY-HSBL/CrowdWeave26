@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased — v0.8.0 reproducible experimentation candidate
+## v0.8.0 — 2026-10-17 experimental reproducibility gates
 
 - Validate converted CrowdHuman train/val image-label-metadata alignment,
   full-body bounding boxes, leakage, stale YAML roots and annotation hashes.

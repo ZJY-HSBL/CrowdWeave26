@@ -109,7 +109,7 @@ throughput, GPU memory, DDP and torch.compile compatibility remain unverified.
 - `.github/workflows/release.yml`: runs test gates before creating a
   tagged source ZIP on version changes. No datasets or weights in releases.
 
-Current stable tag: **v0.7.1**. CRA-only and combined SCAD+CFSR+CRA
+Current stable tag: **v0.8.0**. CRA-only and combined SCAD+CFSR+CRA
 synthetic one-epoch CPU train-loop gates pass; CrowdHuman accuracy remains untested.
 
 ## Research limitations / 研究边界

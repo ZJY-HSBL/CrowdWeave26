@@ -22,12 +22,11 @@
     "IgnoreAwareTraining": "Opt-in synchronized native Mosaic/flip geometry; mask unmatched background BCE and auxiliary CFSR BCE; synthetic CPU training verified"
   },
   "evaluation_limits": [
-    "No full CrowdHuman training, validation AP/mMR/JI, measured improvement or publication-ready ablation",
-    "GOTP synthetic fixture has nonzero pair penalties and gradients but is not real-dataset evidence",
-    "Only synthetic GOTP kernel CPU microbenchmark in CI; no end-to-end GPU timing or memory data",
-    "DDP, torch.compile, CutMix, CopyPaste unverified",
-    "Ignore rectangles geometrically transformed, not pixel-exact ignore regions",
-    "No verified algorithmic novelty, top-tier publication claim or SOTA improvement"
+    "Actual CrowdHuman full training, official AP/mMR/JI and multi-seed model deltas remain unmeasured",
+    "Paired results are only compared if externally supplied; no score generation",
+    "Image content is not included in annotation fingerprint; optional JPEG header check",
+    "No full GPU end-to-end runtime or DDP validation",
+    "Novelty and SOTA conclusions require prior art and real controlled trials"
   ],
   "license_note": "Ultralytics AGPL-3.0/commercial license applies to upstream and derivatives as appropriate",
   "reference_evaluator": {

@@ -48,3 +48,7 @@ tests cannot substitute for real CrowdHuman metrics or establish novelty.
 - **Next:** run CrowdHuman GPU training with locally available authorized
   data and capture reference metrics; measure full-model latency, memory,
   multi-seed confidence intervals and GOTP active-pair incidence.
+
+- **v0.8.0 release gate:** 86 ordinary unit tests pass (5 skipped);
+  pinned YOLO26 integration and reference evaluator tests pass.
+  Only synthetic functional fixtures and plan generation are used in CI.

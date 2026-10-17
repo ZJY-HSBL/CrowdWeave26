@@ -69,6 +69,21 @@ def preflight(root: Path, *, verify_images: bool = False) -> dict:
     root = Path(root).resolve()
     if not (root / "crowdhuman.yaml").is_file():
         raise FileNotFoundError("Expected converter-created crowdhuman.yaml")
+    # The converter writes quoted-JSON strings for the dataset root. Reject
+    # relocated/stale YAML pointers that would silently train on other files.
+    yaml_text=(root/"crowdhuman.yaml").read_text(encoding="utf-8")
+    settings={}
+    for line in yaml_text.splitlines():
+        if ":" in line:
+            key,value=line.split(":",1)
+            settings[key.strip()]=value.strip()
+    try:
+        declared=Path(json.loads(settings["path"])).resolve()
+    except (KeyError,ValueError,TypeError) as exc:
+        raise ValueError("Expected converter-generated quoted dataset path") from exc
+    if (declared != root or settings.get("train")!="images/train" or
+        settings.get("val")!="images/val" or settings.get("nc")!="1"):
+        raise ValueError("crowdhuman.yaml points to another root/split or class count")
     files_for_hash = [root / "crowdhuman.yaml"]
     summaries = {}
     split_ids = {}

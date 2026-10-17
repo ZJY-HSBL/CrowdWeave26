@@ -124,3 +124,16 @@ def test_preflight_does_not_parse_image_pixels(tmp_path):
     # Data gate validates existence, labels and metadata only. Actual JPG
     # decode must still be checked by the real dataloader training tests.
     assert preflight(root)["checked"]
+
+
+def test_optional_jpeg_verification_rejects_corrupted_bytes(tmp_path):
+    from PIL import Image
+    root=fixture_dataset(tmp_path)
+    with pytest.raises(ValueError,match="Invalid JPEG"):
+        preflight(root,verify_images=True)
+    for split in ("train","val"):
+        name="sample_"+split+".jpg"
+        Image.new("RGB",(64,64)).save(root/"images"/split/name)
+    valid=preflight(root,verify_images=True)
+    assert valid["jpeg_headers_verified"] is True
+    assert "JPEG bytes NOT hashed" in valid["fingerprint_scope"]

@@ -12,8 +12,8 @@ def fixture_dataset(tmp_path):
     for split in ("train","val"):
         image_dir=root/"images"/split
         label_dir=root/"labels"/split
-        image_dir.mkdir(parents=True)
-        label_dir.mkdir(parents=True)
+        image_dir.mkdir(parents=True, exist_ok=True)
+        label_dir.mkdir(parents=True, exist_ok=True)
         (root/"metadata").mkdir(exist_ok=True)
         ident="sample_"+split
         (image_dir/(ident+".jpg")).write_bytes(b"mock image marker only")
